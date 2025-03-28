@@ -12,6 +12,6 @@ function resolveEnvPath(inputPath) {
 const modsFolder = resolveEnvPath(process.env.balatroModsFolder);
 
 fs.rmSync(path.join(modsFolder, process.env.modName), { recursive: true, force: true });
-fs.cpSync('./build', path.join(modsFolder, process.env.modName), {recursive: true});
+fs.cpSync('./build', modsFolder, {recursive: true});
 
 console.log(chalk.green(`Build copied to ${path.join(modsFolder, process.env.modName)}.`));

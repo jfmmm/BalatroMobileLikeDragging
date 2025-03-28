@@ -12,21 +12,22 @@ const verbose = process.env.verboseParser === 'true';
 const srcFolder = './src';
 const buildFolder = './build';
 const templateFolder = './template';
-const manifestFile = './build/manifest.json';
+const manifestFile = 'manifest.json';
 
 // Remove the build directory
 fs.rmSync(buildFolder, { recursive: true, force: true });
 fs.mkdirSync(buildFolder);
+fs.mkdirSync(path.join(buildFolder, process.env.modName));
 
 // Copy the template files to the build directory
 fs.readdirSync(templateFolder).forEach((file) => {
-  fs.cpSync(templateFolder, buildFolder, {recursive: true});
+  fs.cpSync(templateFolder, path.join(buildFolder, process.env.modName), {recursive: true});
 });
-fs.mkdirSync(path.join(buildFolder, 'lovely'));
+fs.mkdirSync(path.join(buildFolder, process.env.modName, 'lovely'));
 
 // Update the manifest version
-const data = fs.readFileSync(manifestFile, { encoding: 'utf-8' }).toString().replace(/%MOD_VERSION%/g, packageJson.version);
-fs.writeFileSync(manifestFile, data);
+const data = fs.readFileSync(path.join(buildFolder, process.env.modName, manifestFile), { encoding: 'utf-8' }).toString().replace(/%MOD_VERSION%/g, packageJson.version);
+fs.writeFileSync(path.join(buildFolder, process.env.modName, manifestFile), data);
 
 // Parse the lua files and generate the patches
 const luaFiles = globSync('**/*.lua', { cwd: srcFolder });
@@ -49,7 +50,7 @@ priority = 1`;
     console.info(luaFile);
 
     if (verbose) console.info(patches.join('\n\n'));
-    fs.writeFileSync(`build/lovely/${path.basename(luaFile, '.lua')}.toml`, patches.join('\n\n'));
+    fs.writeFileSync(path.join(buildFolder, process.env.modName, 'lovely', `${path.basename(luaFile, '.lua')}.toml`), file);
 
     if (verbose) console.info('');
   }
