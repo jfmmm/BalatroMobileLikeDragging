@@ -1,0 +1,21 @@
+# EditorConfig is awesome: https://editorconfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[.lua]
+end_of_line = lf
+insert_final_newline = false
+tab_width = 4
+indent_style = space
+charset = utf-8
+trim_trailing_whitespace = false
+
+[.mjs]
+end_of_line = lf
+insert_final_newline = true
+tab_width = 2
+indent_style = space
+charset = utf-8
+trim_trailing_whitespace = true

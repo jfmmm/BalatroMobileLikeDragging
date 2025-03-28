@@ -1,0 +1,1979 @@
+diff -ruN ./balatroSrc/card.lua ./src/card.lua
+--- ./balatroSrc/card.lua	2025-03-28 00:17:14.011725900 -0400
++++ ./src/card.lua	2025-03-28 00:21:01.403749400 -0400
+@@ -1520,7 +1520,17 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:can_use_consumeable(any_state, skip_check)"
++position = "after"
++payload = "2;2"
++match_indent = false
++]=]
+ function Card:can_use_consumeable(any_state, skip_check)
++    if not self.ability.consumeable then return false end
+     if not skip_check and ((G.play and #G.play.cards > 0) or
+         (G.CONTROLLER.locked) or
+         (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))
+@@ -4579,6 +4589,15 @@
+     end
+ end 
+ 
++-- --[=[>
++-- [[patches]]
++-- [patches.regex]
++-- target = "card.lua"
++-- pattern = 'self\.children\.use_button = UIBox\{[\s\S]+?^            }'
++-- position = "at"
++-- payload = ""
++-- times = 1
++-- ]=]
+ function Card:highlight(is_higlighted)
+     self.highlighted = is_higlighted
+     if self.ability.consumeable or self.ability.set == 'Joker' or (self.area and self.area == G.pack_cards) then
+@@ -4622,6 +4641,150 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:save()"
++position = "before"
++payload = "1;4"
++match_indent = true
++times = 1
++]=]
++function Card:simple_touch()
++    return false
++end
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:save()"
++position = "before"
++payload = "1;16"
++match_indent = true
++times = 1
++]=]
++function Card:single_tap()
++    if self.area and self.area:can_highlight(self) then
++        if (self.area == G.hand) and (G.STATE == G.STATES.HAND_PLAYED) then return end
++        if self.highlighted ~= true then
++            self.area:add_to_highlighted(self)
++        else
++            self.area:remove_from_highlighted(self)
++            play_sound('cardSlide2', nil, 0.3)
++        end
++    end
++    if self.area and self.area == G.deck and self.area.cards[1] == self then
++        G.FUNCS.deck_info()
++    end
++    G.MOBILE_VIBRATION_QUEUE = math.max(G.MOBILE_VIBRATION_QUEUE or 0, 1)
++end
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:save()"
++position = "before"
++payload = "1;7"
++match_indent = true
++times = 1
++]=]
++function Card:can_long_press()
++    if self.area and ((self.area == G.hand) or
++    ( self.area == G.deck and self.area.cards[1] == self)) then
++        return true
++    end
++end
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:save()"
++position = "before"
++payload = "1;4"
++match_indent = true
++times = 1
++]=]
++function Card:can_hover_on_drag()
++    return false
++end
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:save()"
++position = "before"
++payload = "1;32"
++match_indent = true
++times = 1
++]=]
++function Card:swipe_up()
++    G.MOBILE_VIBRATION_QUEUE = math.max(G.MOBILE_VIBRATION_QUEUE or 0, 2)
++    if self.area and self.area == G.hand and self.area:can_highlight(self) then
++        if (self.area == G.hand) and (G.STATE == G.STATES.HAND_PLAYED) then return end
++        if self.highlighted ~= true then
++            self.area:add_to_highlighted(self)
++        end
++    end
++    if not self.ability.consumeable and self.area and self.area == G.pack_cards and G.FUNCS.can_select_card(self) then
++        G.FUNCS.use_card({config={ref_table = self}})
++        return
++    end
++    if self.area and ((self.area == G.shop_jokers) or (self.area == G.shop_booster) or (self.area == G.shop_vouchers)) then
++        if self.ability.set == 'Booster' and ((self.cost) <= 0 or (self.cost <= G.GAME.dollars - G.GAME.bankrupt_at)) then
++            G.FUNCS.use_card({config={ref_table = self}})
++            return
++        elseif self.ability.set == 'Voucher' and ((self.cost) <= 0 or (self.cost <= G.GAME.dollars - G.GAME.bankrupt_at)) then
++            G.FUNCS.use_card({config={ref_table = self}})
++            return
++        elseif self.area == G.shop_jokers and G.FUNCS.can_buy_check(self) then
++            G.FUNCS.buy_from_shop({config = {
++                ref_table = self,
++                id = 'buy'
++            }})
++            return
++        end
++    end
++    if self.ability.consumeable and self.area and (self.area == G.consumeables or self.area == G.pack_cards) and self:can_use_consumeable() then
++        G.FUNCS.use_card({config={ref_table = self}})
++    end
++end
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "card.lua"
++pattern = "function Card:save()"
++position = "before"
++payload = "1;21"
++match_indent = true
++times = 1
++]=]
++function Card:swipe_down()
++    G.MOBILE_VIBRATION_QUEUE = math.max(G.MOBILE_VIBRATION_QUEUE or 0, 3)
++    if self.area and self.area:can_highlight(self) then
++        if (self.area == G.hand) and (G.STATE == G.STATES.HAND_PLAYED) then return end
++        if self.highlighted == true then
++            self.area:remove_from_highlighted(self)
++            play_sound('cardSlide2', nil, 0.3)
++        end
++    end
++    if G.FUNCS.can_buy_and_use({config={ref_table = self}}) then
++        G.FUNCS.buy_from_shop({config = {
++            ref_table = self,
++            id = 'buy_and_use'
++        }})
++        return
++    end
++    if self.area and (self.area == G.jokers or self.area == G.consumeables) then
++        self:sell_card()
++    end
++end
++
+ function Card:save()
+     cardTable = {
+         sort_id = self.sort_id,
+diff -ruN ./balatroSrc/cardarea.lua ./src/cardarea.lua
+--- ./balatroSrc/cardarea.lua	2025-03-28 00:17:14.010679200 -0400
++++ ./src/cardarea.lua	2025-03-28 00:21:01.418621900 -0400
+@@ -110,7 +110,19 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "cardarea.lua"
++pattern = "function CardArea:can_highlight(card)"
++position = "after"
++payload = "2;3"
++match_indent = false
++times = 1
++]=]
+ function CardArea:can_highlight(card)
++    -- Disable the action button if the setting is off
++    if not G.SETTINGS.enable_action_buttons and self.config.type ~= 'hand' then return false end
+     if G.CONTROLLER.HID.controller then 
+         if  self.config.type == 'hand'
+         then
+@@ -184,6 +196,18 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.regex]
++target = "cardarea.lua"
++pattern = '(?<before>function CardArea:remove_from_highlighted[\s\S]+)(?:    card:highlight\(false\))'
++position = "at"
++payload = '''
++$before
++${9;11}
++'''
++times = 1
++]=]
+ function CardArea:remove_from_highlighted(card, force)
+     if (not force) and  card and card.ability.forced_selection and self == G.hand then return end
+     for i = #self.highlighted,1,-1 do
+@@ -192,7 +216,9 @@
+             break
+         end
+     end
+-    card:highlight(false)
++    if card then
++        card:highlight(false)
++    end
+     if self == G.hand and G.STATE == G.STATES.SELECTING_HAND then
+         self:parse_highlighted()
+     end
+@@ -211,6 +237,18 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.regex]
++target = "cardarea.lua"
++pattern = '(?<before>function CardArea:set_ranks[\s\S]+\n)(?<toReplace> +card.states.drag.can = false)'
++position = "at"
++payload = '''
++$before${9;12}
++    $toReplace
++${14;14}'''
++times = 1
++]=]
+ function CardArea:set_ranks()
+     for k, card in ipairs(self.cards) do
+         card.rank = k
+@@ -219,7 +257,12 @@
+             card.states.drag.can = false 
+             card.states.collide.can = false 
+         elseif self.config.type == 'play' or self.config.type == 'shop' or self.config.type == 'consumeable' then 
+-            card.states.drag.can = false
++            -- This enable dragging on all platforms
++            if --[[ G.CONTROLLER.HID.touch and ]] ((self.config.type == 'shop') or (self.config.type == 'consumeable')) then
++                card.states.drag.can = true
++            else
++                card.states.drag.can = false
++            end
+         else
+             card.states.drag.can = true
+         end
+@@ -402,7 +445,17 @@
+             }
+             self.children.view_deck.states.collide.can = false
+         end
+-    if G.deck_preview or self.states.collide.is or (G.buttons and G.buttons.states.collide.is and G.CONTROLLER.HID.controller) then self.children.view_deck:draw() end
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "cardarea.lua"
++pattern = "if G.deck_preview or self.states.collide.is or (G.buttons and G.buttons.states.collide.is and G.CONTROLLER.HID.controller) then self.children.view_deck:draw() end"
++position = "at"
++payload = "1:5;1:230"
++match_indent = true
++times = 1
++]=]
++    if G.deck_preview or (not self.under_overlay and self.states.collide.is) or (G.buttons and (not G.buttons.under_overlay and G.buttons.states.collide.is) and G.CONTROLLER.HID.controller) then self.children.view_deck:draw() end
+     if self.children.peek_deck then self.children.peek_deck:draw() end
+     end
+ end
+@@ -509,7 +562,16 @@
+     if self.config.type == 'joker' or self.config.type == 'title_2' then
+         for k, card in ipairs(self.cards) do
+             if not card.states.drag.is then 
+-                card.T.r = 0.1*(-#self.cards/2 - 0.5 + k)/(#self.cards)+ (G.SETTINGS.reduced_motion and 0 or 1)*0.02*math.sin(2*G.TIMERS.REAL+card.T.x)
++--[=[>
++[[patches]]
++[patches.regex]
++target = "cardarea.lua"
++pattern = "card.T.r = 0.1"
++position = "at"
++payload = "1:17;1:59"
++times = 1
++]=]
++                card.T.r = (self.config.flat and 0 or 0.1)*(-#self.cards/2 - 0.5 + k)/(#self.cards)+ (G.SETTINGS.reduced_motion and 0 or 1)*0.02*math.sin(2*G.TIMERS.REAL+card.T.x)
+                 local max_cards = math.max(#self.cards, self.config.temp_limit)
+                 card.T.x = self.T.x + (self.T.w-self.card_w)*((k-1)/math.max(max_cards-1, 1) - 0.5*(#self.cards-max_cards)/math.max(max_cards-1, 1)) + 0.5*(self.card_w - card.T.w)
+                 if #self.cards > 2 or (#self.cards > 1 and self == G.consumeables) or (#self.cards > 1 and self.config.spread) then
+diff -ruN ./balatroSrc/engine/controller.lua ./src/engine/controller.lua
+--- ./balatroSrc/engine/controller.lua	2025-03-28 00:17:14.011202300 -0400
++++ ./src/engine/controller.lua	2025-03-28 00:21:01.433446000 -0400
+@@ -4,6 +4,17 @@
+ --The controller contains all engine logic for how human input interacts with any game objects.
+ function Controller:init()
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "function Controller:init()"
++position = "after"
++payload = "1;2"
++match_indent = false
++]=]
++self.dragSelectActive = {active = false, mode = nil}
++
+ --Each of these are calculated per frame to pass along to the corresponding nodes for input handling
+ self.clicked = {target = nil, handled = true, prev_target = nil} --The node that was clicked this frame
+ self.focused = {target = nil, handled = true, prev_target = nil } --The node that is being focused on this frame, only applies when using controller
+@@ -11,6 +22,18 @@
+ self.hovering = {target = nil, handled = true, prev_target = nil} --The node being hovered this frame
+ self.released_on = {target = nil, handled = true, prev_target = nil} --The node that the cursor 'Released' on, like letting go of LMB
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "function Controller:init()"
++position = "after"
++payload = "1;2"
++match_indent = false
++]=]
++--Touch controller
++self.touch_control = {s_tap = {target = nil,handled = true}, l_press = {target = nil, handled = true}}
++
+ self.collision_list = {} --A list of all node that the cursor currently collides with
+ 
+ --Input values to be determined by this controller - the actual game objects should not have to see any of this
+@@ -141,9 +164,24 @@
+         self.HID.last_type = 'axis'
+     elseif HID_type and HID_type ~= self.HID.last_type then
+         self.HID.dpad = HID_type == 'button'
+-        self.HID.pointer = HID_type == 'mouse' or HID_type == 'axis_cursor' or HID_type == 'touch'
++        self.HID.pointer = HID_type == 'mouse' or HID_type == 'axis_cursor'-- or HID_type == 'touch'
+         self.HID.controller = HID_type == 'button' or HID_type == 'axis_cursor'
+         self.HID.mouse = HID_type == 'mouse'
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "self.HID.mouse = HID_type == 'mouse'"
++position = "after"
++payload = "1;6"
++match_indent = false
++]=]
++        if self.HID.touch ~= (HID_type == 'touch') then
++            self.HID.touch = HID_type == 'touch'
++            for k, v in pairs(G.I.CARDAREA) do
++                v:set_ranks()
++            end
++        end
+         self.HID.touch = HID_type == 'touch'
+         self.HID.axis_cursor = HID_type == 'axis_cursor'
+         self.HID.last_type = HID_type
+@@ -182,6 +220,16 @@
+     end
+ end
+ 
++
++--[=[>
++[[patches]]
++[patches.regex]
++target = "engine/controller.lua"
++pattern = 'function Controller:update([\s\S]+?)^end'
++position = "at"
++payload = "1;518"
++times = 1
++]=]
+ --Called every game logic update frame
+ function Controller:update(dt)
+ 
+@@ -312,6 +360,7 @@
+         self.L_cursor_queue = nil
+     end
+ 
++    self.finger_cursor = self.cursor_hover.target
+     self.dragging.prev_target = self.dragging.target
+     self.released_on.prev_target = self.released_on.target
+     self.clicked.prev_target = self.clicked.target
+@@ -319,109 +368,384 @@
+ 
+     --Cursor is currently down
+     if not self.cursor_down.handled then 
++        --TOUCH
++        ----------------------------------
++        if self.HID.touch then
++            if self.cursor_hover.target and self.cursor_hover.target.states.hover.can then
++                self.finger_focus = self.cursor_hover.target
++            end
++            self.touch_control.clear_touch = true
++        --NON TOUCH
++        ----------------------------------
++        else
++
++        end
++        --BOTH
++        ----------------------------------
++        self.cursor_down.distance = 0
++        self.cursor_down.duration = 0
+         if self.cursor_down.target.states.drag.can then
+             self.cursor_down.target.states.drag.is = true
+             self.cursor_down.target:set_offset(self.cursor_down.T, 'Click')
+             self.dragging.target = self.cursor_down.target
+             self.dragging.handled = false
++        elseif #self.collision_list == 0 and G.SETTINGS.enable_drag_select then
++            self.dragSelectActive.active = true
+         end
+         self.cursor_down.handled = true
+     end
+ 
+     if not self.cursor_up.handled then 
++        self.dragSelectActive.active = false
++        self.dragSelectActive.mode = nil
++
+         --First, stop dragging
+         if self.dragging.target then
+             self.dragging.target:stop_drag()
++            self.finger_cursor = self.dragging.target
+             self.dragging.target.states.drag.is = false
+             self.dragging.target = nil
+         end
+-        --Now, handle the Cursor release
+-        --Was the Cursor release in the same location as the Cursor press and within Cursor timeout?
+-        if self.cursor_down.target then 
+-            if (not self.cursor_down.target.click_timeout or self.cursor_down.target.click_timeout*G.SPEEDFACTOR > self.cursor_up.time - self.cursor_down.time) then
+-                if Vector_Dist(self.cursor_down.T, self.cursor_up.T) < G.MIN_CLICK_DIST then 
+-                    if self.cursor_down.target.states.click.can then
+-                        self.clicked.target = self.cursor_down.target
+-                        self.clicked.handled = false
++
++        --TOUCH
++        ----------------------------------
++        if self.HID.touch then
++            if self.cursor_down.target then
++                if self.cursor_down.distance < G.MIN_CLICK_DIST and self.cursor_down.duration < (0.2 * G.SPEEDFACTOR) then
++                    if self.cursor_down.target.states.click.can and not self.touch_control.l_press.target then
++                        self.touch_control.s_tap.target = self.cursor_down.target
++                        self.touch_control.s_tap.time = self.cursor_up.time - self.cursor_down.time
++                        self.touch_control.s_tap.handled = false
+                     end
+                 --if not, was the Cursor dragging some other thing?
+-                elseif self.dragging.prev_target and self.cursor_up.target and self.cursor_up.target.states.release_on.can then 
+-                    self.released_on.target = self.cursor_up.target
+-                    self.released_on.handled = false
++                elseif self.dragging.prev_target then
++                    local releasable = nil
++                    for _, v in ipairs(self.collision_list) do
++                        if v.states.hover.can and (not v.states.drag.is) and (v ~= self.dragging.prev_target) then
++                            releasable = v
++                            break
++                        end
++                    end
++                    if releasable and releasable.states.release_on.can then
++                        self.released_on.target = releasable
++                        self.released_on.handled = false
++                    end
++                end
++            end
++        --NON TOUCH
++        ----------------------------------
++        else
++            if self.cursor_down.target then
++                if
++                    not self.cursor_down.target.click_timeout
++                    -- Not sure what the click_timeout is for, but we need to bypass it when were dragging something on desktop or it always block the
++                    -- release of the card unless we drag it so fast it's under the 0.3s click_timeout time.
++                    -- or self.dragging.prev_target
++                    or self.cursor_down.target.click_timeout*G.SPEEDFACTOR > self.cursor_up.time - self.cursor_down.time
++                then
++                    if Vector_Dist(self.cursor_down.T, self.cursor_up.T) < G.MIN_CLICK_DIST then
++                        if self.cursor_down.target.states.click.can then
++                            self.clicked.target = self.cursor_down.target
++                            self.clicked.time = self.cursor_up.time - self.cursor_down.time
++                            self.clicked.handled = false
++                        end
++                    end
++                end
++
++                --was the Cursor dragging some other thing?
++                if self.dragging.prev_target then
++                    local releasable = nil
++                    for _, v in ipairs(self.collision_list) do
++                        if v.states.hover.can and (not v.states.drag.is) and (v ~= self.dragging.prev_target) then
++                            releasable = v
++                            break
++                        end
++                    end
++                    if releasable and releasable.states.release_on.can then
++                        self.released_on.target = releasable
++                        self.released_on.handled = false
++                    end
+                 end
+             end
+         end
++        --BOTH
++        ----------------------------------
++
++        --Was the Cursor release in the same location as the Cursor press and within Cursor timeout?
+         self.cursor_up.handled = true
+     end
+ 
+-    --Cursor is currently hovering over something
+-    if self.cursor_hover.target and self.cursor_hover.target.states.hover.can and (not self.HID.touch or self.is_cursor_down) then 
+-        self.hovering.target = self.cursor_hover.target
+-        if self.hovering.prev_target and self.hovering.prev_target ~= self.hovering.target then self.hovering.prev_target.states.hover.is = false end
+-        self.hovering.target.states.hover.is = true
+-        self.hovering.target:set_offset(self.cursor_hover.T, 'Hover')
+-    elseif (self.cursor_hover.target == nil or (self.HID.touch and not self.is_cursor_down)) and self.hovering.target then
+-        self.hovering.target.states.hover.is = false
+-        self.hovering.target = nil
++    --TOUCH
++    ----------------------------------
++    if self.HID.touch then
++
++        if self.finger_focus then
++            if self.is_cursor_down and self.finger_focus:can_long_press() and self.cursor_down.duration > (0.2 * G.SPEEDFACTOR) and not self.touch_control.l_press.target and not self.touch_control.l_pressed then
++                self.touch_control.l_press.target = self.finger_focus
++                self.touch_control.l_press.handled = false
++            end
++        end
++    --NON TOUCH
++    ----------------------------------
++    else
++        --Cursor is currently hovering over something
++        if self.cursor_hover.target and self.cursor_hover.target.states.hover.can then
++            self.hovering.target = self.cursor_hover.target
++            if self.hovering.prev_target and self.hovering.prev_target ~= self.hovering.target then self.hovering.prev_target.states.hover.is = false end
++            self.hovering.target.states.hover.is = true
++            self.hovering.target:set_offset(self.cursor_hover.T, 'Hover')
++        elseif self.cursor_hover.target == nil and self.hovering.target then
++            self.hovering.target.states.hover.is = false
++            self.hovering.target = nil
++        end
+     end
++    --BOTH
++    ----------------------------------
++
+ 
+     --------------------------------------------------------------------
+     -- Sending all input updates to the game objects
+     --------------------------------------------------------------------
+-    --The clicked object
+-    if not self.clicked.handled then
+-        self.clicked.target:click()
+-        self.clicked.handled = true
+-    end
+-
+-    --Process registry clicks
+-    self:process_registry()
+-
+-    --The object being dragged
+-    if self.dragging.target then
+-        self.dragging.target:drag()
+-    end
+-
+-    --The object released on
+-    if not self.released_on.handled and self.dragging.prev_target then
+-        if self.dragging.prev_target == self.hovering.target then self.hovering.target:stop_hover();self.hovering.target = nil end
+-        self.released_on.target:release(self.dragging.prev_target)
+-        self.released_on.handled = true
+-    end
+-
+-    --The object being hovered over
+-    if self.hovering.target then
+-        self.hovering.target:set_offset(self.cursor_hover.T, 'Hover')
+-        if self.hovering.prev_target ~= self.hovering.target then 
+-            if self.hovering.target ~= self.dragging.target and not self.HID.touch then               
+-                self.hovering.target:hover() 
+-            elseif self.HID.touch then
+-                local _ID =  self.hovering.target.ID
+-                G.E_MANAGER:add_event(Event({
+-                    trigger = 'after',
+-                    blockable = false, 
+-                    blocking = false,
+-                    delay = G.MIN_HOVER_TIME,
+-                    func = function()
+-                        if self.hovering.target and _ID == self.hovering.target.ID then
+-                            self.hovering.target:hover() 
++    --touch
++    if self.HID.touch then
++        if self.finger_focus and not self.finger_focus:can_long_press() then
++            if self.finger_focus ~= self.hovering.target and self.finger_focus:can_hover_on_drag() then
++                self.hovering.target = self.finger_focus
++                self.hovering.handled = false
++            end
++        end
++
++        if self.dragSelectActive.active then
++            local distance = math.huge;
++            local closest = nil;
++            for _, v in ipairs(self.collision_list) do
++                local cur_distance = Vector_Dist(self.cursor_hover.T, v.T)
++                if v.area ~= nil and v.area.config.type == 'hand' and v.states.hover.can and (not v.states.drag.is) and (v ~= self.dragging.prev_target) and cur_distance < distance then
++                    closest = v
++                    distance = cur_distance
++                end
++            end
++
++            if closest and
++                (not self.dragSelectActive.mode -- We accept all cards if no mode is set
++                or self.dragSelectActive.mode == 'select' and not closest.highlighted -- We only accept cards that are not already highlighted if we are in select mode
++                or self.dragSelectActive.mode == 'deselect' and closest.highlighted) -- We only accept cards that are already highlighted if we are in deselect mode
++            then
++                if closest.highlighted then
++                    closest.area:remove_from_highlighted(closest)
++                    self.dragSelectActive.mode = 'deselect'
++                else
++                    closest.area:add_to_highlighted(closest)
++                    self.dragSelectActive.mode = 'select'
++                end
++            end
++        end
++
++        if not self.touch_control.s_tap.handled then
++            if self.touch_control.s_tap.target.single_tap then
++                self.touch_control.s_tap.target:single_tap()
++                if self.finger_focus and not self.finger_focus:can_long_press() then
++                    self.hovering.target = self.touch_control.s_tap.target
++                    self.hovering.handled = false
++                end
++            else
++                self.touch_control.s_tap.target:click()
++            end
++            self.touch_control.s_tap.handled = true
++            self.touch_control.clear_touch = nil
++        end
++
++        if not self.touch_control.l_press.handled then
++            self.hovering.target = self.touch_control.l_press.target
++            self.hovering.handled = false
++            self.touch_control.l_pressed = self.finger_focus
++            self.touch_control.l_press.handled = true
++        end
++
++        if self.touch_control.clear_touch or not self.finger_focus then
++            self.touch_control.l_press.target = nil
++            self.touch_control.l_pressed = nil
++            self.touch_control.s_tap.target = nil
++            self.hovering.target = nil
++
++            self.hovering.handled = false
++            self.touch_control.clear_touch = nil
++        end
++
++        if self.touch_control.l_pressed then
++            self.hovering.target = self.finger_focus
++        end
++
++        --The object being dragged
++        if not self.dragging.handled and self.cursor_down.duration and (self.cursor_down.duration > (0.1 * G.SPEEDFACTOR)) then
++            create_drag_target_from_card(self.dragging.target)
++            self.dragging.handled = true
++        end
++        if self.dragging.target then
++            self.dragging.target:drag()
++            -- We added this part to hide the card action buttons when the user start dragging the cards, we check that the card has
++            -- been dragged away from the start of the drag by a certain amount to avoid having hiding the button when the user is
++            -- clicking on a card as that would cause the button to show up again on the next update.
++            -- Sometime the distance doesn't seem to trigger so we also check for the duration of the drag.
++            if self.dragging.target and self.dragging.target.highlighted and self.dragging.target.area
++                and self.dragging.target.area.config.type ~= 'hand' and self.cursor_down and self.cursor_up
++                and (Vector_Dist(self.cursor_down.T, self.cursor_up.T) > --[[ G.MIN_CLICK_DIST ]] 5 or (self.cursor_down.duration > (0.25 * G.SPEEDFACTOR)))
++            then
++                self.dragging.target.area:remove_from_highlighted(self.dragging.target)
++            end
++        end
++
++        --The object released on
++        if not self.released_on.handled and self.dragging.prev_target then
++            self.released_on.target:release(self.dragging.prev_target)
++            self.released_on.handled = true
++        end
++
++        if not self.hovering.handled then
++            if self.hovering.target then
++                self.hovering.target:hover()
++                self.hovering.target.states.hover.is = true
++                self.hovering.target:set_offset(self.cursor_hover.T, 'Hover')
++
++                if self.hovering.prev_target and self.hovering.prev_target ~= self.hovering.target then
++                    self.hovering.prev_target.states.hover.is = false
++                    self.hovering.prev_target:stop_hover()
++                end
++            elseif self.hovering.prev_target then
++                self.hovering.prev_target.states.hover.is = false
++                self.hovering.prev_target:stop_hover()
++            end
++            self.hovering.handled = true
++        end
++    else
++        --The clicked object
++        if not self.clicked.handled then
++            self.clicked.target:click()
++            self.clicked.handled = true
++        end
++        
++        if self.dragSelectActive.active then
++            local distance = math.huge;
++            local closest = nil;
++            for _, v in ipairs(self.collision_list) do
++                local cur_distance = Vector_Dist(self.cursor_hover.T, v.T)
++                if v.area ~= nil and v.area.config.type == 'hand' and v.states.hover.can and (not v.states.drag.is) and (v ~= self.dragging.prev_target) and cur_distance < distance then
++                    closest = v
++                    distance = cur_distance
++                end
++            end
++
++            if closest and
++                (not self.dragSelectActive.mode -- We accept all cards if no mode is set
++                or self.dragSelectActive.mode == 'select' and not closest.highlighted -- We only accept cards that are not already highlighted if we are in select mode
++                or self.dragSelectActive.mode == 'deselect' and closest.highlighted) -- We only accept cards that are already highlighted if we are in deselect mode
++            then
++                if closest.highlighted then
++                    closest.area:remove_from_highlighted(closest)
++                    self.dragSelectActive.mode = 'deselect'
++                else
++                    closest.area:add_to_highlighted(closest)
++                    self.dragSelectActive.mode = 'select'
++                end
++            end
++        end
++
++        --Process registry clicks
++        self:process_registry()
++
++        --The object being dragged
++        if self.dragging.target and not self.dragging.handled and self.cursor_down.duration and (self.cursor_down.duration > (0.15 * G.SPEEDFACTOR)) then
++            create_drag_target_from_card(self.dragging.target)
++            self.dragging.handled = true
++        end
++        if self.dragging.target then
++            -- We added this part to hide the card action buttons when the user start dragging the cards, we check that the card has
++            -- been dragged away from the start of the drag by a certain amount to avoid having hiding the button when the user is
++            -- clicking on a card as that would cause the button to show up again on the next update.
++            -- Sometime the distance doesn't seem to trigger so we also check for the duration of the drag.
++            if self.dragging.target and self.dragging.target.area and self.dragging.target.area.config.type ~= 'hand' and self.cursor_down and self.cursor_up and (Vector_Dist(self.cursor_down.T, self.cursor_up.T) > --[[ G.MIN_CLICK_DIST ]] 5 or (self.cursor_down.duration > (0.15 * G.SPEEDFACTOR))) then
++                self.dragging.target.area:remove_from_highlighted(self.dragging.target)
++            end
++            self.dragging.target:drag()
++        end
++
++        --The object released on
++        if not self.released_on.handled and self.dragging.prev_target then
++            if self.dragging.prev_target == self.hovering.target then self.hovering.target:stop_hover();self.hovering.target = nil end
++            if self.released_on.target then self.released_on.target:release(self.dragging.prev_target) end
++            self.released_on.handled = true
++        end
++
++        --The object being hovered over
++        if self.hovering.target then
++            self.hovering.target:set_offset(self.cursor_hover.T, 'Hover')
++            if self.hovering.prev_target ~= self.hovering.target then
++                if self.hovering.target ~= self.dragging.target then
++                    self.hovering.target:hover()
++                elseif self.HID.touch then
++                    local _ID =  self.hovering.target.ID
++                    G.E_MANAGER:add_event(Event({
++                        trigger = 'after',
++                        blockable = false,
++                        blocking = false,
++                        delay = G.MIN_HOVER_TIME,
++                        func = function()
++                                if (self.hovering.target and _ID == self.hovering.target.ID) then
++                                self.hovering.target:hover()
++                            end
++                        return true
+                         end
+-                    return true
++                    }))
++                    if self.hovering.prev_target then
++                        self.hovering.prev_target:stop_hover()
+                     end
+-                }))
+-                if self.hovering.prev_target then 
++                end
++                if self.hovering.prev_target then
+                     self.hovering.prev_target:stop_hover()
+-                end   
+-            end
+-            if self.hovering.prev_target then
+-                self.hovering.prev_target:stop_hover()
++                end
+             end
++        elseif self.hovering.prev_target then
++            self.hovering.prev_target:stop_hover()
++        end
++        -- Support for Galdur mod
++        if Galdur then
++            if self.hovering.prev_target
++            and self.hovering.prev_target.role
++            and self.hovering.prev_target.role.major
++            and self.hovering.prev_target.role.major.params
++            and self.hovering.prev_target.role.major.params.stake_chip
++            and self.hovering.target ~= self.hovering.prev_target
++            then
++                self.hovering.prev_target.role.major:stop_hover()
++            end
++            if self.hovering.target
++            and self.hovering.target.role
++            and self.hovering.target.role.major
++            and self.hovering.target.role.major.params
++            and self.hovering.target.role.major.params.stake_chip
++            and self.hovering.target ~= self.hovering.prev_target
++            then
++                self.hovering.target.role.major:hover()
++            end
++        end
++        if self.hovering.target and self.hovering.target == self.dragging.target then
++            self.hovering.target:stop_hover()
+         end
+-    elseif self.hovering.prev_target then
+-        self.hovering.prev_target:stop_hover()
+     end
+-    if self.hovering.target and self.hovering.target == self.dragging.target and not self.HID.touch then
+-        self.hovering.target:stop_hover()
++
++    if self.is_cursor_down then
++        self.cursor_down.distance = math.max(Vector_Dist(self.cursor_down.T, self.cursor_hover.T), self.cursor_down.distance or 0)
++        self.cursor_down.duration = G.TIMERS.TOTAL - self.cursor_down.time -- self.cursor_down.duration = G.TIMERS.UPTIME - self.cursor_down.time
++        if self.cursor_up.target then
++            self.cursor_up.target = nil
++        end
++    end
++    if not self.is_cursor_down then
++        if self.cursor_down.target then
++            self.cursor_down.target = nil
++            self.cursor_down.distance = nil
++            self.cursor_down.duration = nil
++        end
+     end
+ end
+ 
+@@ -1004,15 +1328,33 @@
+         end
+     else
+         for _, v in ipairs(self.collision_list) do
+-            if v.states.hover.can and (not v.states.drag.is or self.HID.touch) then
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "if v.states.hover.can and (not v.states.drag.is or self.HID.touch) then"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++            if v.states.hover.can and (not v.states.drag.is) then
+                 self.cursor_hover.target = v
+                 break 
+             end
+         end
+     end
+ 
+-    if not self.cursor_hover.target or (self.dragging.target and not self.HID.touch) then self.cursor_hover.target = G.ROOM end
+-    if self.cursor_hover.target ~= self.cursor_hover.prev_target then self.cursor_hover.handled = false end 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "if not self.cursor_hover.target or (self.dragging.target and not self.HID.touch) then self.cursor_hover.target = G.ROOM end"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++    if not self.cursor_hover.target or self.dragging.target then self.cursor_hover.target = G.ROOM end
++    if self.cursor_hover.target ~= self.cursor_hover.prev_target then self.cursor_hover.handled = false end
+ end
+ 
+ function Controller:queue_L_cursor_press(x, y)
+@@ -1046,7 +1388,16 @@
+     self.cursor_down.target = nil
+     self.is_cursor_down = true
+ 
+-    local press_node =  (self.HID.touch and self.cursor_hover.target) or self.hovering.target or self.focused.target
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "local press_node =  (self.HID.touch and self.cursor_hover.target) or self.hovering.target or self.focused.target"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++    local press_node =  (self.cursor_hover.target) or self.hovering.target or self.focused.target
+ 
+     if press_node then 
+         self.cursor_down.target = press_node.states.click.can and press_node or press_node:can_drag() or nil
+@@ -1069,7 +1420,16 @@
+     self.cursor_up.target = nil
+     self.is_cursor_down = false
+ 
+-    self.cursor_up.target = self.hovering.target or self.focused.target
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/controller.lua"
++pattern = "self.cursor_up.target = self.hovering.target or self.focused.target"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++    self.cursor_up.target = self.hovering.target or self.focused.target or self.dragging.target
+ 
+     if self.cursor_up.target == nil then 
+         self.cursor_up.target = G.ROOM
+diff -ruN ./balatroSrc/engine/node.lua ./src/engine/node.lua
+--- ./balatroSrc/engine/node.lua	2025-03-28 00:17:14.011202300 -0400
++++ ./src/engine/node.lua	2025-03-28 00:21:01.447624100 -0400
+@@ -286,6 +286,27 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/node.lua"
++pattern = "function Node:update(dt) end"
++position = "after"
++payload = """
++
++${1;7}
++
++"""
++match_indent = false
++]=]
++--Determine touch behaviour
++function Node:simple_touch()
++    return true
++end
++
++function Node:can_long_press() return nil end
++function Node:can_hover_on_drag() return true end
++
+ --Called by the CONTROLLER to determine the position the cursor should be set to for this node
+ function Node:put_focused_cursor()
+     return (self.T.x + self.T.w/2 + self.container.T.x)*(G.TILESCALE*G.TILESIZE), (self.T.y + self.T.h/2 + self.container.T.y)*(G.TILESCALE*G.TILESIZE)
+diff -ruN ./balatroSrc/engine/sprite.lua ./src/engine/sprite.lua
+--- ./balatroSrc/engine/sprite.lua	2025-03-28 00:17:14.011716300 -0400
++++ ./src/engine/sprite.lua	2025-03-28 00:21:01.459212100 -0400
+@@ -95,7 +95,16 @@
+ 
+         G.SHADERS[_shader or 'dissolve']:send('mouse_screen_pos', self.ARGS.prep_shader.cursor_pos)
+         G.SHADERS[_shader or 'dissolve']:send('screen_scale', G.TILESCALE*G.TILESIZE*(_draw_major.mouse_damping or 1)*G.CANV_SCALE)
+-        G.SHADERS[_shader or 'dissolve']:send('hovering',((_shadow_height  and not tilt_shadow) or _no_tilt) and 0 or (_draw_major.hover_tilt or 0)*(tilt_shadow or 1))
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/sprite.lua"
++pattern = "G.SHADERS[_shader or 'dissolve']:send('hovering',((_shadow_height  and not tilt_shadow) or _no_tilt) and 0 or (_draw_major.hover_tilt or 0)*(tilt_shadow or 1))"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++        G.SHADERS[_shader or 'dissolve']:send('hovering',((_shadow_height  and not tilt_shadow) or _no_tilt) and 0 or (((_draw_major.touch_collide_tilt and _draw_major.states.collide.is) and _draw_major.hover_tilt or 0) or 0)*(tilt_shadow or 1))
+         G.SHADERS[_shader or 'dissolve']:send("dissolve",math.abs(_draw_major.dissolve or 0))
+         G.SHADERS[_shader or 'dissolve']:send("time",123.33412*(_draw_major.ID/1.14212 or 12.5123152)%3000)
+         G.SHADERS[_shader or 'dissolve']:send("texture_details",self:get_pos_pixel())
+diff -ruN ./balatroSrc/engine/ui.lua ./src/engine/ui.lua
+--- ./balatroSrc/engine/ui.lua	2025-03-28 00:17:14.011725900 -0400
++++ ./src/engine/ui.lua	2025-03-28 00:21:01.469618800 -0400
+@@ -322,9 +322,19 @@
+     Moveable.move(self.UIRoot, dt)
+ end
+ 
++--[=[>
++[[patches]]
++[patches.regex]
++target = "engine/ui.lua"
++pattern = '(?<before>function UIBox:drag\(offset\)[\s\S]+)(?:    Moveable\.move\(self\.UIRoot, dt\))'
++position = "at"
++payload = '''
++$before${3;3}'''
++times = 1
++]=]
+ function UIBox:drag(offset)
+     Moveable.drag(self,offset)
+-    Moveable.move(self.UIRoot, dt)
++    --Moveable.move(self.UIRoot, dt)
+ end
+ 
+ function UIBox:add_child(node, parent)
+@@ -753,7 +763,16 @@
+             local collided_button = self.config.button_UIE or self
+             self.ARGS.button_colours = self.ARGS.button_colours or {}
+             self.ARGS.button_colours[1] = self.config.button_delay and mix_colours(self.config.colour, G.C.L_BLACK, 0.5) or self.config.colour
+-            self.ARGS.button_colours[2] = (((collided_button.config.hover and collided_button.states.hover.is) or (collided_button.last_clicked and collided_button.last_clicked > G.TIMERS.REAL - 0.1)) and G.C.UI.HOVER or nil)
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/ui.lua"
++pattern = "self.ARGS.button_colours[2] = (((collided_button.config.hover and collided_button.states.hover.is) or (collided_button.last_clicked and collided_button.last_clicked > G.TIMERS.REAL - 0.1)) and G.C.UI.HOVER or nil)"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++            self.ARGS.button_colours[2] = (((collided_button.config.hover and collided_button.states.hover.is and ((not G.CONTROLLER.HID.touch) or G.CONTROLLER.is_cursor_down)) or (collided_button.last_clicked and collided_button.last_clicked > G.TIMERS.REAL - 0.1)) and G.C.UI.HOVER or nil)
+             for k, v in ipairs(self.ARGS.button_colours) do
+                 love.graphics.setColor(v)
+                 if self.config.r and self.VT.w > 0.01 then 
+@@ -815,6 +834,30 @@
+         end
+     end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/ui.lua"
++pattern = "--Draw the outline for highlighted buttons"
++position = "before"
++payload = """
++${1;13}
++"""
++match_indent = false
++]=]
++    if self.config.pulse_border then
++        self.border_pulse_timer = self.border_pulse_timer or G.TIMERS.REAL
++        local lw = 2*math.max(0, 0.5*math.cos(6*(G.TIMERS.REAL - self.border_pulse_timer)) + 0.5)
++        prep_draw(self, 1)
++        love.graphics.scale((1)/(G.TILESIZE))
++        love.graphics.setLineWidth(lw + 1)
++        love.graphics.setColor(adjust_alpha(G.C.BLACK, 0.2*lw, true))
++        self:draw_pixellated_rect('fill', parallax_dist)
++        love.graphics.setColor(self.config.colour[4] > 0 and mix_colours(G.C.WHITE, self.config.colour, 0.8) or G.C.WHITE)
++        self:draw_pixellated_rect('line', parallax_dist)
++        love.graphics.pop()
++    end
++
+     --Draw the outline for highlighted buttons
+     if self.states.focus.is then 
+         self.focus_timer = self.focus_timer or G.TIMERS.REAL
+@@ -935,7 +978,32 @@
+     love.graphics.polygon((_type == 'line' or _type == 'line_emboss') and 'line' or "fill", self.pixellated_rect[_type].vertices)
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/ui.lua"
++pattern = "function UIElement:update(dt)"
++position = "after"
++payload = """
++${2;15}
++"""
++match_indent = false
++]=]
+ function UIElement:update(dt)
++    if G.DISABLED_BUTTONS and self.config.button and not self.tutorial_disabled then
++        for k, v in ipairs(G.DISABLED_BUTTONS) do
++            if self.config.button == v then
++                self.tutorial_disabled = self.config.button
++                self.config.button = nil
++                self.disable_button = true
++            end
++        end
++    elseif not G.DISABLED_BUTTONS and self.tutorial_disabled then 
++        self.disable_button = nil
++        self.config.button = self.tutorial_disabled
++        self.tutorial_disabled = nil
++    end
++
+     G.ARGS.FUNC_TRACKER = G.ARGS.FUNC_TRACKER or {}
+     if self.config.button_delay then
+         self.config.button_temp = self.config.button or self.config.button_temp
+@@ -976,6 +1044,16 @@
+             G.FUNCS.tut_next()
+         end
+         G.FUNCS[self.config.button](self)
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/ui.lua"
++pattern = "G.NO_MOD_CURSOR_STACK = nil"
++position = "before"
++payload = "1;1"
++match_indent = false
++]=]
++        G.CONTROLLER.touch_control.only_hover = G.ROOM
+         
+         G.NO_MOD_CURSOR_STACK = nil
+ 
+@@ -1042,7 +1120,19 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/ui.lua"
++pattern = "function UIElement:release(other)"
++position = "after"
++payload = "2;4"
++match_indent = false
++]=]
+ function UIElement:release(other)
++    if self.config.release_func then 
++        self.config.release_func(other)
++    end
+     if self.parent then self.parent:release(other) end
+ end
+ 
+diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_callbacks.lua
+--- ./balatroSrc/functions/button_callbacks.lua	2025-03-28 00:17:14.011725900 -0400
++++ ./src/functions/button_callbacks.lua	2025-03-28 00:21:01.480122800 -0400
+@@ -47,6 +47,34 @@
+     play_sound('paper1')
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "G.FUNCS.can_load_profile = function(e)"
++position = "before"
++payload = "1;19"
++match_indent = false
++]=]
++G.FUNCS.check_drag_target_active = function(e)
++  if e.config.args.active_check(e.config.args.card) then
++    if (not e.config.pulse_border) or not e.config.args.init then
++      e.config.pulse_border = true
++      e.config.colour = e.config.args.colour
++      e.config.args.text_colour[4] = 1
++      e.config.release_func = e.config.args.release_func
++    end
++  else
++    if (e.config.pulse_border) or not e.config.args.init  then 
++      e.config.pulse_border = nil
++      e.config.colour = adjust_alpha(G.C.L_BLACK, 0.9)
++      e.config.args.text_colour[4] = 0.5
++      e.config.release_func = nil
++    end
++  end
++  e.config.args.init = true
++end
++
+ --Checks if the cost of a non voucher card is greater than what the player can afford and changes the 
+ --buy button visuals accordingly
+ --
+@@ -69,6 +97,30 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "G.FUNCS.can_load_profile = function(e)"
++position = "before"
++payload = "1;16"
++match_indent = false
++]=]
++G.FUNCS.can_buy_check = function(_card)
++  local isCryptidMod = to_big
++  if isCryptidMod then
++    if to_big(_card.cost) > (to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (to_big(_card.cost) > to_big(0)) then
++      return false
++    end
++    return true
++  end
++
++  if _card.cost > (G.GAME.dollars - G.GAME.bankrupt_at) and (_card.cost > 0) then
++    return false
++  end
++  return true
++end
++
+ --Checks if the cost of a non voucher card is greater than what the player can afford and changes the 
+ --buy button visuals accordingly
+ --
+@@ -88,6 +140,30 @@
+     end
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "G.FUNCS.can_load_profile = function(e)"
++position = "before"
++payload = "1;15"
++match_indent = false
++]=]
++G.FUNCS.can_buy_and_use_check = function(_card)
++  local isCryptidMod = to_big
++  if isCryptidMod then
++    if ((to_big(_card.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (to_big(_card.cost) > to_big(0))) or (not _card:can_use_consumeable()) then
++      return false
++    end
++    return true
++  end
++
++  if (((_card.cost > G.GAME.dollars - G.GAME.bankrupt_at) and (_card.cost > 0)) or (not _card:can_use_consumeable())) then
++    return false
++  end
++  return true
++end
++
+ --Checks if the cost of a voucher card is greater than what the player can afford and changes the 
+ --redeem button visuals accordingly
+ --
+@@ -1353,6 +1429,17 @@
+   G.OVERLAY_MENU.alignment.offset.y = 0
+   G.ROOM.jiggle = G.ROOM.jiggle + 1
+   G.OVERLAY_MENU:align_to_major()
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "G.OVERLAY_MENU:align_to_major()"
++position = "after"
++payload = "1;1"
++match_indent = false
++]=]
++  G.CONTROLLER.touch_control.clear_touch = true
+ end
+ 
+ --Removes the overlay menu if one exists, unpauses the game, and saves the settings to file
+@@ -1365,6 +1452,16 @@
+   G.OVERLAY_MENU = nil
+   G.VIEWING_DECK = nil
+   G.SETTINGS.paused = false
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "G.SETTINGS.paused = false"
++position = "after"
++payload = "1;1"
++match_indent = false
++]=]
++  G.CONTROLLER.touch_control.clear_touch = true
+ 
+   --Save settings to file
+   G:save_settings()
+@@ -2109,6 +2206,22 @@
+     end
+   end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "G.FUNCS.can_select_card = function(e)"
++position = "before"
++payload = "1;7"
++match_indent = false
++]=]
++  G.FUNCS.can_select_card_check = function(_card)
++    if _card.ability.set ~= 'Joker' or (_card.edition and _card.edition.negative) or #G.jokers.cards < G.jokers.config.card_limit then 
++      return true
++    end
++    return false
++  end
++
+   G.FUNCS.can_select_card = function(e)
+     if e.config.ref_table.ability.set ~= 'Joker' or (e.config.ref_table.edition and e.config.ref_table.edition.negative) or #G.jokers.cards < G.jokers.config.card_limit then 
+         e.config.colour = G.C.GREEN
+@@ -2130,7 +2243,16 @@
+   end
+ 
+   G.FUNCS.can_skip_booster = function(e)
+-    if G.pack_cards and (G.pack_cards.cards[1]) and 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/button_callbacks.lua"
++pattern = "if G.pack_cards and (G.pack_cards.cards[1]) and"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++    if G.pack_cards and G.pack_cards.cards and (G.pack_cards.cards[1]) and 
+     (G.STATE == G.STATES.PLANET_PACK or G.STATE == G.STATES.STANDARD_PACK or G.STATE == G.STATES.BUFFOON_PACK or (G.hand and (G.hand.cards[1] or (G.hand.config.card_limit <= 0)))) then 
+         e.config.colour = G.C.GREY
+         e.config.button = 'skip_booster'
+diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functions.lua
+--- ./balatroSrc/functions/misc_functions.lua	2025-03-28 00:17:14.011725900 -0400
++++ ./src/functions/misc_functions.lua	2025-03-28 17:31:47.887147900 -0400
+@@ -2020,3 +2020,264 @@
+       end
+   end
+ end
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/misc_functions.lua"
++pattern = "function EMPTY(t)"
++position = "before"
++payload = "1;252"
++match_indent = true
++]=]
++function create_drag_target_from_card(_card)
++  local isCryptidMod = to_big
++
++  if _card and G.STAGE == G.STAGES.RUN then
++      G.DRAG_TARGETS = G.DRAG_TARGETS or {
++          S_buy =         Moveable{T={x = G.jokers.T.x, y = G.jokers.T.y - 0.1, w = G.consumeables.T.x + G.consumeables.T.w - G.jokers.T.x, h = G.jokers.T.h+0.6}},
++          S_buy_and_use = Moveable{T={x = G.deck.T.x + 0.2, y = G.deck.T.y - 5.1, w = G.deck.T.w-0.1, h = 4.5}},
++          C_sell =        Moveable{T={x = G.jokers.T.x, y = G.jokers.T.y - 0.2, w = G.jokers.T.w, h = G.jokers.T.h+0.6}},
++          J_sell =        Moveable{T={x = G.consumeables.T.x+0.3, y = G.consumeables.T.y - 0.2, w = G.consumeables.T.w-0.3, h = G.consumeables.T.h+0.6}},
++          C_use =         Moveable{T={x = G.deck.T.x + 0.2, y = G.deck.T.y - 5.1, w = G.deck.T.w-0.1, h =4.5}},
++          P_select =      Moveable{T={x = G.play.T.x, y = G.play.T.y - 2, w = G.play.T.w + 2, h = G.play.T.h + 1}},
++          -- Cryptid
++          P_pull =        Moveable{T={x = G.play.T.x, y = G.play.T.y - 2, w = G.play.T.w, h = G.play.T.h + 1}},
++      }
++
++      if _card.area and (_card.area == G.shop_jokers or _card.area == G.shop_vouchers or _card.area == G.shop_booster) then 
++          local buy_loc = copy_table(localize((_card.area == G.shop_vouchers and 'ml_redeem_target') or (_card.area == G.shop_booster and 'ml_open_target') or 'ml_buy_target'))
++          buy_loc[#buy_loc + 1] = '$'.._card.cost
++          drag_target({
++              cover = G.DRAG_TARGETS.S_buy,
++              colour = adjust_alpha(G.C.GREEN, (G.SETTINGS.drag_area_opacity / 100)),
++              text = buy_loc,
++              card = _card,
++              active_check = (function(other)
++                  return G.FUNCS.can_buy_check(other)
++              end),
++              release_func = (function(other)
++                  if other.area == G.shop_jokers and G.FUNCS.can_buy_check(other) then 
++                      if G.OVERLAY_TUTORIAL and G.OVERLAY_TUTORIAL.button_listen == 'buy_from_shop' then
++                          G.FUNCS.tut_next()
++                      end
++                      G.FUNCS.buy_from_shop({config = {
++                          ref_table = other,
++                          id = 'buy'
++                      }})
++                      return
++                  elseif other.area == G.shop_vouchers and G.FUNCS.can_buy_check(other) then
++                      G.FUNCS.use_card({config={ref_table = other}})
++                  elseif other.area == G.shop_booster and G.FUNCS.can_buy_check(other) then
++                      G.FUNCS.use_card({config={ref_table = other}})
++                  end
++              end)
++          })
++
++          if G.FUNCS.can_buy_and_use_check(_card) then
++              local buy_use_loc = copy_table(localize('ml_buy_and_use_target'))
++              buy_use_loc[#buy_use_loc + 1] = '$'.._card.cost
++              drag_target({
++                  cover = G.DRAG_TARGETS.S_buy_and_use,
++                  colour = adjust_alpha(G.C.ORANGE, (G.SETTINGS.drag_area_opacity / 100)),
++                  text=buy_use_loc,
++                  card = _card,
++                  active_check = (function(other)
++                      return G.FUNCS.can_buy_and_use_check(other)
++                  end),  
++                  release_func = (function(other)
++                      if G.FUNCS.can_buy_and_use_check(other) then 
++                          G.FUNCS.buy_from_shop({config = {
++                              ref_table = other,
++                              id = 'buy_and_use'
++                          }})
++                          return
++                      end
++                  end)
++              })
++          end
++      end
++
++      if _card.area and (_card.area == G.pack_cards) then
++          if _card.ability.consumeable and not (_card.ability.set == 'Planet') then
++              drag_target({
++                  cover = G.DRAG_TARGETS.C_use,
++                  colour = adjust_alpha(G.C.RED, (G.SETTINGS.drag_area_opacity / 100)),
++                  text = {localize('b_use')},
++                  card = _card,
++                  active_check = (function(other)
++                      return other:can_use_consumeable()
++                  end),
++                  release_func = (function(other)
++                      if other:can_use_consumeable() then
++                        G.FUNCS.use_card({config={ref_table = other}})
++                      end
++                  end)
++              })
++          else
++              if _card.ability.set == 'Joker' then
++                  -- We move the select joker drag area from the middle of the screen to the top if the settings is enabled
++                  local cover
++                  if G.SETTINGS.move_select_joker_drag_area then
++                    cover = G.DRAG_TARGETS.S_buy;
++                  else
++                    cover = G.DRAG_TARGETS.P_select;
++                  end
++
++                  drag_target({
++                      cover = cover,
++                      colour = adjust_alpha(G.C.GREEN, (G.SETTINGS.drag_area_opacity / 100)),
++                      text = {localize('b_select')},
++                      card = _card,
++                      active_check = (function(other)
++                          return G.FUNCS.can_select_card_check(other)
++                      end),
++                      release_func = (function(other)
++                          if G.FUNCS.can_select_card_check(other) then
++                              G.FUNCS.use_card({config={ref_table = other}})
++                          end
++                      end)
++                  })
++              end
++          end
++      end
++
++      if _card.area
++          and (
++            _card.area == G.jokers or _card.area == G.consumeables or
++            -- Cryptid CCD Deck support (hand full of consumable cards)
++            (isCryptidMod and _card.area == G.hand and _card.ability and _card.ability.consumeable)
++          )
++      then
++          local sell_loc = copy_table(localize('ml_sell_target'))
++          sell_loc[#sell_loc + 1] = '$'..(_card.facing == 'back' and '?' or _card.sell_cost)
++
++          -- Cryptid mod support
++          local isCryptidCursedJoker = isCryptidMod
++              and _card.area and _card.area.config.type == "joker"
++              and _card.config and _card.config.center
++              and _card.config.center.rarity == "cry_Cryptid"
++              and _card.ability.name ~= "cry-Monopoly"
++
++          local isCryptidCryPotion = isCryptidMod and _card.config and _card.config.center and _card.config.center.key == "c_cry_potion"
++
++          if not isCryptidMod or (not isCryptidCursedJoker and not isCryptidCryPotion) then
++              drag_target({
++                  cover = _card.area == G.consumeables and G.DRAG_TARGETS.C_sell or G.DRAG_TARGETS.J_sell,
++                  colour = adjust_alpha(G.C.GOLD, (G.SETTINGS.drag_area_opacity / 100)),
++                  text = sell_loc,
++                  card = _card,
++                  active_check = (function(other)
++                      return other:can_sell_card()
++                  end),
++                  release_func = (function(other)
++                      G.FUNCS.sell_card{config={ref_table=other}}
++                  end)
++              })
++          end
++
++          if _card.area == G.consumeables
++              -- Cryptid CCD Deck support (hand full of consumable cards)
++              or (isCryptidMod and _card.area == G.hand and _card.ability and _card.ability.consumeable)
++          then
++              drag_target({
++                  cover = G.DRAG_TARGETS.C_use,
++                  colour = adjust_alpha(G.C.RED, (G.SETTINGS.drag_area_opacity / 100)),
++                  text = {localize('b_use')},
++                  card = _card,
++                  active_check = (function(other)
++                      return other:can_use_consumeable()
++                  end),
++                  release_func = (function(other)
++                      if other:can_use_consumeable() then
++                          G.FUNCS.use_card({config={ref_table = other}})
++                          if G.OVERLAY_TUTORIAL and G.OVERLAY_TUTORIAL.button_listen == 'use_card' then
++                              G.FUNCS.tut_next()
++                          end
++                      end
++                  end)
++              })
++          end
++      end
++
++      if isCryptidMod then
++          -- Cryptic Code Cards Pull
++          if (_card.area == G.pack_cards and G.pack_cards) and _card.ability.consumeable then
++              if _card.ability.set == "Code" then
++                  drag_target({
++                      cover = G.DRAG_TARGETS.P_pull,
++                      colour = adjust_alpha(G.C.GREEN, (G.SETTINGS.drag_area_opacity / 100)),
++                      text = {localize('b_pull')},
++                      card = _card,
++                      active_check = (function(other)
++                          if #G.consumeables.cards < G.consumeables.config.card_limit then
++                            return true
++                          end
++                          return false
++                      end),
++                      release_func = (function(other)
++                          if #G.consumeables.cards < G.consumeables.config.card_limit then
++                              G.FUNCS.reserve_card({config={ref_table = other}})
++                          end
++                      end)
++                  })
++              end
++          end
++
++          -- Cryptic Double Side Flip
++          if _card.area
++              and _card.edition
++              and (_card.area == G.jokers or _card.area == G.consumeables or _card.area == G.hand)
++              and _card.edition.cry_double_sided
++              and not Card.no(_card, "dbl")
++          then
++              drag_target({
++                  cover = G.DRAG_TARGETS.P_select,
++                  colour = adjust_alpha(G.C.GREEN, (G.SETTINGS.drag_area_opacity / 100)),
++                  text = {localize('b_flip')},
++                  card = _card,
++                  active_check = (function(other)
++                      return true
++                  end),
++                  release_func = (function(other)
++                      G.FUNCS.flip({config={ref_table = other}})
++                      other.area:remove_from_highlighted(other)
++                  end)
++              })
++          end
++
++          -- Cryptic Double Side Merge
++          if _card.area
++              and (_card.area == G.jokers or _card.area == G.consumeables or _card.area == G.hand)
++              and (not _card.edition or not _card.edition.cry_double_sided)
++              and not _card.ability.eternal
++              and not Card.no(_card, "dbl")
++          then
++              for i = 1, #_card.area.cards do
++                  if _card.area.cards[i].edition and _card.area.cards[i].edition.cry_double_sided then
++                      drag_target({
++                          cover = G.DRAG_TARGETS.S_buy_and_use,
++                          colour = adjust_alpha(G.C.GREEN, (G.SETTINGS.drag_area_opacity / 100)),
++                          text = {localize('b_merge')},
++                          card = _card,
++                          active_check = (function(other)
++                              local cardRef = {
++                                  config = {
++                                      ref_table = other,
++                                      colour = nil,
++                                      button = nil,
++                                  }
++                              }
++                              G.FUNCS.can_flip_merge_card(cardRef)
++                              return cardRef.config.button == "flip_merge"
++                          end),
++                          release_func = (function(other)
++                              G.FUNCS.flip_merge({config={ref_table = other}})
++                          end)
++                      })
++                  end
++              end
++          end
++      end
++  end
++end
+diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitions.lua
+--- ./balatroSrc/functions/UI_definitions.lua	2025-03-28 00:17:14.012271400 -0400
++++ ./src/functions/UI_definitions.lua	2025-03-28 00:21:01.503041200 -0400
+@@ -879,6 +879,72 @@
+       }))
+   end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "function attention_text(args)"
++position = "before"
++payload = """
++${1;56}
++"""
++match_indent = false
++]=]
++  function drag_target(args)
++    args = args or {}
++    args.text = args.text or {'BUY'}
++    args.colour = copy_table(args.colour or G.C.UI.TRANSPARENT_DARK)
++    args.cover = args.cover or nil
++    args.emboss = args.emboss or nil
++    args.active_check = args.active_check or (function(other) return true end)
++    args.release_func = args.release_func or (function(other) G.DEBUG_VALUE = 'WORKIN' end)
++    args.text_colour = copy_table(G.C.WHITE)
++    args.uibox_config = {
++      align = args.align or 'tli',
++      offset = args.offset or {x=0,y=0}, 
++      major = args.cover or args.major or nil,
++    }
++
++    local drag_area_width =(args.T and args.T.w or args.cover and args.cover.T.w or 0.001) + (args.cover_padding or 0)
++
++    local text_rows = {}
++    for k, v in ipairs(args.text) do
++      text_rows[#text_rows+1] = {n=G.UIT.R, config={align = "cm", padding = 0.05, maxw = drag_area_width-0.1}, nodes={{n=G.UIT.O, config={object = DynaText({scale = args.scale, string = v, maxw = args.maxw or (drag_area_width-0.1), colours = {args.text_colour},float = true, shadow = true, silent = not args.noisy, 0.7, pop_in = 0, pop_in_rate = 6, rotate = args.rotate or nil})}}}}
++    end
++
++    args.DT = UIBox{
++      T = {0,0,0,0},
++      definition = 
++        {n=G.UIT.ROOT, config = {align = 'cm',  args = args, can_collide = true, hover = true, release_func = args.release_func, func = 'check_drag_target_active', minw = drag_area_width, minh = (args.cover and args.cover.T.h or 0.001) + (args.cover_padding or 0), padding = 0.03, r = 0.1, emboss = args.emboss, colour = G.C.CLEAR}, nodes=text_rows}, 
++      config = args.uibox_config
++    }
++    args.DT.attention_text = true
++
++    if G.OVERLAY_TUTORIAL and G.OVERLAY_TUTORIAL.highlights then 
++      G.OVERLAY_TUTORIAL.highlights[#G.OVERLAY_TUTORIAL.highlights+1] = args.DT
++    end
++
++    G.E_MANAGER:add_event(Event({
++      trigger = 'after',
++      delay = 0,
++      blockable = false,
++      blocking = false,
++      func = function()
++        if not G.CONTROLLER.dragging.target and args.DT then 
++          if G.OVERLAY_TUTORIAL and G.OVERLAY_TUTORIAL.highlights then
++            for k, v in ipairs(G.OVERLAY_TUTORIAL.highlights) do
++              if args.DT == v then 
++                table.remove(G.OVERLAY_TUTORIAL.highlights, k)
++                break
++              end
++            end
++          end
++          args.DT:remove()
++          return true
++        end
++      end
++      }))
++  end
+ 
+   function attention_text(args)
+     args = args or {}
+@@ -1458,12 +1524,21 @@
+   return t 
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "_tag_sprite.states.collide.can = not not run_info"
++position = "at"
++payload = "6;6"
++match_indent = false
++]=]
+ function create_UIBox_blind_tag(blind_choice, run_info)
+   G.GAME.round_resets.blind_tags = G.GAME.round_resets.blind_tags or {}
+   if not G.GAME.round_resets.blind_tags[blind_choice] then return nil end
+   local _tag = Tag(G.GAME.round_resets.blind_tags[blind_choice], nil, blind_choice)
+   local _tag_ui, _tag_sprite = _tag:generate_UI()
+-  _tag_sprite.states.collide.can = not not run_info
++  _tag_sprite.states.collide.can = false
+   return 
+   {n=G.UIT.R, config={id = 'tag_container', ref_table = _tag, align = "cm"}, nodes={
+     {n=G.UIT.R, config={align = 'tm', minh = 0.65}, nodes={
+@@ -1475,7 +1550,7 @@
+         }},
+         not run_info and {n=G.UIT.C, config={align = "cm", colour = G.C.UI.BACKGROUND_INACTIVE, minh = 0.6, minw = 2, maxw = 2, padding = 0.07, r = 0.1, shadow = true, hover = true, one_press = true, button = 'skip_blind', func = 'hover_tag_proxy', ref_table = _tag}, nodes={
+           {n=G.UIT.T, config={text = localize('b_skip_blind'), scale = 0.4, colour = G.C.UI.TEXT_INACTIVE}}
+-        }} or {n=G.UIT.C, config={align = "cm", padding = 0.1, emboss = 0.05, colour = mix_colours(G.C.BLUE, G.C.BLACK, 0.4), r = 0.1, maxw = 2}, nodes={
++        }} or {n=G.UIT.C, config={align = "cm", padding = 0.1, emboss = 0.05, colour = mix_colours(G.C.BLUE, G.C.BLACK, 0.4), r = 0.1, maxw = 2, hover = true, func = 'hover_tag_proxy', ref_table = _tag}, nodes={
+           {n=G.UIT.T, config={text = localize('b_skip_reward'), scale = 0.35, colour = G.C.WHITE}},
+         }},
+       }}
+@@ -2287,6 +2362,21 @@
+     tab_definition_function_args = 'Audio'
+   }
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "local t = create_UIBox_generic_options({back_func = 'options',contents = {create_tabs("
++position = "before"
++payload = "1;6"
++match_indent = false
++]=]
++  tabs[#tabs+1] = {
++    label = 'Dragging',
++    tab_definition_function = G.UIDEF.settings_tab,
++    tab_definition_function_args = 'Dragging'
++  }
++
+   local t = create_UIBox_generic_options({back_func = 'options',contents = {create_tabs(
+     {tabs = tabs,
+     tab_h = 7.05,
+@@ -2329,6 +2419,22 @@
+       create_slider({label = localize('b_set_music_vol'), w = 5, h = 0.4, ref_table = G.SETTINGS.SOUND, ref_value = 'music_volume', min = 0, max = 100}),
+       create_slider({label = localize('b_set_game_vol'), w = 5, h = 0.4, ref_table = G.SETTINGS.SOUND, ref_value = 'game_sounds_volume', min = 0, max = 100}),
+     }}
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "elseif tab == 'Graphics' then "
++position = "before"
++payload = "1;7"
++match_indent = false
++]=]
++  elseif tab == 'Dragging' then 
++    return {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
++      create_toggle({label = 'Enable Actions Buttons', ref_table = G.SETTINGS, ref_value = 'enable_action_buttons'}),
++      create_toggle({label = 'Enable drag to select/deselect from hand area', ref_table = G.SETTINGS, ref_value = 'enable_drag_select'}),
++      create_slider({label = 'Drag Area Opacity (Default: 90%)', w = 5, h = 0.4, ref_table = G.SETTINGS, ref_value = 'drag_area_opacity', min = 0, max = 100}),
++      create_toggle({label = 'Move Joker Booster Pack Select Area To Joker Buy Area', ref_table = G.SETTINGS, ref_value = 'move_select_joker_drag_area'}),
++    }}
+   elseif tab == 'Graphics' then 
+     return {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
+       create_option_cycle({w = 4,scale = 0.8, label = localize("b_set_shadows"),options = localize('ml_shadow_opt'), opt_callback = 'change_shadows', current_option = (G.SETTINGS.GRAPHICS.shadows == 'On' and 1 or 2)}),
+@@ -3996,6 +4102,16 @@
+     temp_blind.states.hover.can = true
+     temp_blind.states.drag.can = false
+     temp_blind.states.collide.can = true
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "temp_blind.states.collide.can = true"
++position = "after"
++payload = "1;1"
++match_indent = false
++]=]
++    temp_blind.touch_collide_tilt = true
+     temp_blind.config = {blind = v, force_focus = true}
+     if discovered and not v.alerted then 
+       blinds_to_be_alerted[#blinds_to_be_alerted+1] = temp_blind
+@@ -4151,7 +4267,16 @@
+   local locked_card = Card(G.your_collection.T.x + G.your_collection.T.w/2 - G.CARD_W/2, G.your_collection.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, card_center.set == 'Voucher' and G.v_locked or G.j_locked)
+   locked_card:remove_UI()
+   locked_card.ID = card.ID
+-  card.states.click.can = false
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "card.states.click.can = false"
++position = "at"
++payload = "1;1"
++match_indent = false
++]=]
++  --card.states.click.can = false
+   locked_card.states.click.can = false
+   card.states.visible = false
+   card.no_ui = true
+diff -ruN ./balatroSrc/game.lua ./src/game.lua
+--- ./balatroSrc/game.lua	2025-03-28 00:17:14.011725900 -0400
++++ ./src/game.lua	2025-03-28 00:21:01.515077600 -0400
+@@ -3007,9 +3007,18 @@
+     return (_state*15251252.2/5.132)%1,  (_state*1422.5641311/5.42)%1,  (_state*1522.1523122/5.132)%1, 1
+ end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "game.lua"
++pattern = "(self.deck and self.deck.cards[1] and self.deck.cards[1].states.collide.is and ((not self.deck.cards[1].states.drag.is) or self.CONTROLLER.HID.touch) and (not self.CONTROLLER.HID.controller)) or "
++position = "at"
++payload = "3:9;3:287"
++match_indent = true
++]=]
+ function Game:update_selecting_hand(dt)
+     if not self.deck_preview and not G.OVERLAY_MENU and (
+-        (self.deck and self.deck.cards[1] and self.deck.cards[1].states.collide.is and ((not self.deck.cards[1].states.drag.is) or self.CONTROLLER.HID.touch) and (not self.CONTROLLER.HID.controller)) or 
++        (self.deck and self.deck.cards[1] and ((self.CONTROLLER.HID.touch and (self.deck.cards[1].states.hover.is)) or (not self.CONTROLLER.HID.touch and (self.deck.cards[1].states.collide.is and ((not self.deck.cards[1].states.drag.is))))) and (not self.CONTROLLER.HID.controller)) or 
+         G.CONTROLLER.held_buttons.triggerleft) then
+         if self.buttons then
+             self.buttons.states.visible = false
+diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
+--- ./balatroSrc/globals.lua	2025-03-28 00:17:14.011725900 -0400
++++ ./src/globals.lua	2025-03-28 00:21:01.525877600 -0400
+@@ -42,11 +42,35 @@
+     self.F_HIDE_BETA_LANGS = nil
+ 
+     --loadstring("\105\102\32\108\111\118\101\46\115\121\115\116\101\109\46\103\101\116\79\83\40\41\32\61\61\32\39\105\79\83\39\32\111\114\32\108\111\118\101\46\115\121\115\116\101\109\46\103\101\116\79\83\40\41\32\61\61\32\39\65\110\100\114\111\105\100\39\32\116\104\101\110\10\32\32\108\111\118\101\46\101\118\101\110\116\46\113\117\105\116\40\41\10\101\110\100\10")()
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "globals.lua"
++pattern = "function Game:set_globals()"
++position = "after"
++payload = "1;2"
++match_indent = true
++]=]
++    self.F_TOUCH_MOUSE = nil
++    self.F_HIDE_LOADING_BAR = nil
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "globals.lua"
++pattern = "    if love.system.getOS() == 'Windows' then"
++position = "after"
++payload = "7;8"
++match_indent = false
++]=]
+     if love.system.getOS() == 'Windows' then
+         self.F_DISCORD = true
+         self.F_SAVE_TIMER = 5
+         self.F_ENGLISH_ONLY = false
+         self.F_CRASH_REPORTS = false
++        self.F_MOBILE = true
++        self.F_LINKTREE = true
++        self.F_RUMBLE = 1
+     end
+ 
+     if love.system.getOS() == 'OS X' then
+@@ -139,6 +163,19 @@
+     --           SETTINGS
+     --||||||||||||||||||||||||||||||
+     self.SETTINGS = {
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "globals.lua"
++pattern = "self.SETTINGS = {"
++position = "after"
++payload = "1;4"
++match_indent = false
++]=]
++        enable_action_buttons = true,
++        move_select_joker_drag_area = false,
++        drag_area_opacity = 90,
++        enable_drag_select = true,
+         COMP = {
+             name = '',
+             prev_name = '',
+@@ -340,7 +377,19 @@
+     --||||||||||||||||||||||||||||||
+     --        CONSTANTS
+     --||||||||||||||||||||||||||||||
+-    self.MIN_CLICK_DIST = 0.9
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "globals.lua"
++pattern = "self.MIN_CLICK_DIST = 0.9"
++position = "at"
++payload = "1;4"
++match_indent = false
++]=]
++    -- Changing this from 0.9 to 0.1 fix the issue with the buttons popping out
++    -- on cards when you drag them and release them close to where you started dragging
++    -- Putting 0 break every button in the game, main menu included.
++    self.MIN_CLICK_DIST = 0.1
+     self.MIN_HOVER_TIME = 0.1
+     self.DEBUG = false
+     self.ANIMATION_FPS = 10
+diff -ruN ./balatroSrc/main.lua ./src/main.lua
+--- ./balatroSrc/main.lua	2025-03-28 00:17:14.012795300 -0400
++++ ./src/main.lua	2025-03-28 00:21:01.536620900 -0400
+@@ -1,3 +1,7 @@
++if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
++  require("lldebugger").start()
++end
++
+ if (love.system.getOS() == 'OS X' ) and (jit.arch == 'arm64' or jit.arch == 'arm') then jit.off() end
+ require "engine/object"
+ require "bit"
+diff -ruN ./balatroSrc/ModsSupport/Cryptid.lua ./src/ModsSupport/Cryptid.lua
+--- ./balatroSrc/ModsSupport/Cryptid.lua	1969-12-31 19:00:00.000000000 -0500
++++ ./src/ModsSupport/Cryptid.lua	2025-03-28 18:15:16.766185500 -0400
+@@ -0,0 +1,58 @@
++-- This just revert the half baked implementation of Cryptid hover inside card tooltip
++-- until it's fixed or a better solution can be implemented.
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "engine/node.lua"
++pattern = "if self.children.h_popup and not (self.force_popup and self:force_popup()) then"
++position = 'at'
++match_indent = true
++payload = "if self.children.h_popup then"
++]=]
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = """=[SMODS Cryptid "lib/ui.lua"]"""
++pattern = """
++local cach = CardArea.can_highlight
++function CardArea:can_highlight(card)
++	if self.config.collection then
++		return true
++	end
++	return cach(self)
++end
++"""
++position = 'at'
++match_indent = true
++payload = ""
++]=]
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = """=[SMODS Cryptid "lib/ui.lua"]"""
++pattern = """
++local cainit = CardArea.init
++function CardArea:init(X, Y, W, H, config)
++	if config.collection then
++		config.highlight_limit = config.card_limit
++	end
++	return cainit(self, X, Y, W, H, config)
++end
++"""
++position = 'at'
++match_indent = true
++payload = ""
++]=]
++
++--[=[>
++[[patches]]
++[patches.pattern]
++target = """=[SMODS Cryptid "lib/ui.lua"]"""
++pattern = "if not self:force_popup() and not self.states.hover.is then"
++position = 'at'
++match_indent = true
++payload = "if not self.highlighted and not self.states.hover.is then"
++]=]
+diff -ruN ./balatroSrc/ModsSupport/Galdur.lua ./src/ModsSupport/Galdur.lua
+--- ./balatroSrc/ModsSupport/Galdur.lua	1969-12-31 19:00:00.000000000 -0500
++++ ./src/ModsSupport/Galdur.lua	2025-03-28 00:21:01.548037400 -0400
+@@ -0,0 +1,24 @@
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "galdur.lua"
++pattern = "local card_click_ref = Card.click"
++position = "before"
++payload = "1;16"
++match_indent = false
++]=]
++local card_single_tap_ref = Card.single_tap
++function Card:single_tap()
++    if self.deck_select_position and self.config.center.unlocked then
++        Galdur.run_setup.selected_deck_from = self.area.config.index
++        Galdur.run_setup.choices.deck = Back(self.config.center)
++        -- Galdur.run_setup.choices.stake = get_deck_win_stake(Galdur.run_setup.choices.deck.effect.center.key)
++        Galdur.set_new_deck()
++    elseif self.params.stake_chip and not self.params.stake_chip_locked then
++        Galdur.run_setup.choices.stake = self.params.stake
++        G.E_MANAGER:clear_queue('galdur')
++        Galdur.populate_chip_tower(self.params.stake)
++    else
++        card_single_tap_ref(self)
++    end
++end
+diff -ruN ./balatroSrc/tag.lua ./src/tag.lua
+--- ./balatroSrc/tag.lua	2025-03-28 00:17:14.014913400 -0400
++++ ./src/tag.lua	2025-03-28 00:21:01.550037800 -0400
+@@ -509,6 +509,16 @@
+     tag_sprite.states.drag.can = false
+     tag_sprite.states.collide.can = true
+     tag_sprite.config = {tag = self, force_focus = true}
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "tag.lua"
++pattern = "tag_sprite.hover = function(_self)"
++position = "before"
++payload = "1;2"
++match_indent = false
++]=]
++    tag_sprite.touch_collide_tilt = true
+ 
+     tag_sprite.hover = function(_self)
+         if not G.CONTROLLER.dragging.target or G.CONTROLLER.using_touch then 

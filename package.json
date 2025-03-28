@@ -1,0 +1,36 @@
+{
+  "name": "mobilelikedragging",
+  "version": "2.1.0",
+  "description": "The mod adds dragging support to use/sell/buy cards like on the mobile version of the game. Works great on Steam Deck using the touch display.",
+  "main": "index.js",
+  "scripts": {
+    "unpack": "npm run cleanSources && node tools/unpackBalatroSource.mjs",
+    "repack": "node tools/repackBalatroSource.mjs",
+    "watch": "nodemon --watch src -e lua --exec npm run buildToModFolder",
+    "build": "node tools/build.mjs",
+    "createPatch": "diff -ruN ./balatroSrc ./src > patch.diff",
+    "applyPatch": "patch -p2 -d ./src < patch.diff",
+    "copyToModFolder": "node tools/copyToModFolder.mjs",
+    "buildToModFolder": "npm run build && npm run copyToModFolder",
+    "cleanSources": "npm run cleanSourceFolder && npm run cleanBalatroFolder",
+    "cleanSourceFolder": "node tools/cleanSourceFolder.mjs",
+    "cleanBalatroFolder": "node tools/cleanBalatroFolder.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jfmmm/BalatroMobileLikeDragging.git"
+  },
+  "author": "jfmmm",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jfmmm/BalatroMobileLikeDragging/issues"
+  },
+  "homepage": "https://github.com/jfmmm/BalatroMobileLikeDragging#readme",
+  "dependencies": {
+    "7zip-bin": "^5.2.0",
+    "chalk": "^5.4.1",
+    "dotenv-json": "^1.0.0",
+    "node-7z": "^3.0.0",
+    "nodemon": "^3.1.9"
+  }
+}

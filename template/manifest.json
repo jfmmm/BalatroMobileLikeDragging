@@ -1,0 +1,7 @@
+{
+  "name": "MobileLikeDragging",
+  "version_number": "%MOD_VERSION%",
+  "website_url": "https://www.nexusmods.com/balatro/mods/133",
+  "description": "The mod adds dragging support to use/sell/buy cards like on the mobile version of the game. Works great on Steam Deck using the touch display.",
+  "dependencies": []
+}
