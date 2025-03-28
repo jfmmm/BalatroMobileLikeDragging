@@ -22,6 +22,7 @@ fs.mkdirSync(buildFolder);
 fs.readdirSync(templateFolder).forEach((file) => {
   fs.cpSync(templateFolder, buildFolder, {recursive: true});
 });
+fs.mkdirSync(path.join(buildFolder, 'lovely'));
 
 // Update the manifest version
 const data = fs.readFileSync(manifestFile, { encoding: 'utf-8' }).toString().replace(/%MOD_VERSION%/g, packageJson.version);
