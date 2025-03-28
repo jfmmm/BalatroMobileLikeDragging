@@ -4,7 +4,7 @@ A balatro mod that adds dragging support to use/sell/buy cards like on the mobil
 
 This repo is focused on development of the mod, if you just want to install the mod, see [nexus page](https://www.nexusmods.com/balatro/mods/133?tab=description).
 
-If you need the patch file for some reason, you can use the patch.diff file here and install it with `patch -p2 -d "BALATRO_FOLDER_NAME_GOES_HERE" < patch.diff`.
+If you need the patch file for some reason, you can use the `patch.diff` file in here and install it with `patch -p2 -d "BALATRO_FOLDER_NAME_GOES_HERE" < patch.diff`.
 
 ## Requirement
 
