@@ -4,4 +4,4 @@
 /build/
 node_modules
 
-# .env.json // @TODO uncomment this once you pushed a default .env.json file
+.env.json
