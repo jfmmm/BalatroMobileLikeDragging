@@ -1,6 +1,6 @@
 diff -ruN ./balatroSrc/card.lua ./src/card.lua
---- ./balatroSrc/card.lua	2025-03-29 11:03:23.321516100 -0400
-+++ ./src/card.lua	2025-03-29 11:03:29.270272800 -0400
+--- ./balatroSrc/card.lua	2025-03-29 12:04:08.215307800 -0400
++++ ./src/card.lua	2025-03-29 13:29:11.688935100 -0400
 @@ -1520,7 +1520,17 @@
      end
  end
@@ -19,23 +19,51 @@ diff -ruN ./balatroSrc/card.lua ./src/card.lua
      if not skip_check and ((G.play and #G.play.cards > 0) or
          (G.CONTROLLER.locked) or
          (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))
-@@ -4579,6 +4589,15 @@
+@@ -4579,21 +4589,33 @@
      end
  end 
  
-+-- --[=[>
-+-- [[patches]]
-+-- [patches.regex]
-+-- target = "card.lua"
-+-- pattern = 'self\.children\.use_button = UIBox\{[\s\S]+?^            }'
-+-- position = "at"
-+-- payload = ""
-+-- times = 1
-+-- ]=]
++--[=[>
++[[patches]]
++[patches.regex]
++target = "card.lua"
++pattern = 'self\.children\.use_button = UIBox\{[\s\S]+?^            }'
++position = "at"
++payload = "7;18"
++times = 1
++]=]
  function Card:highlight(is_higlighted)
      self.highlighted = is_higlighted
      if self.ability.consumeable or self.ability.set == 'Joker' or (self.area and self.area == G.pack_cards) then
-@@ -4622,6 +4641,150 @@
+         if self.highlighted and self.area and self.area.config.type ~= 'shop' then
+             local x_off = (self.ability.consumeable and -0.1 or 0)
+-            self.children.use_button = UIBox{
+-                definition = G.UIDEF.use_and_sell_buttons(self), 
+-                config = {align=
+-                        ((self.area == G.jokers) or (self.area == G.consumeables)) and "cr" or
+-                        "bmi"
+-                    , offset = 
+-                        ((self.area == G.jokers) or (self.area == G.consumeables)) and {x=x_off - 0.4,y=0} or
+-                        {x=0,y=0.65},
+-                    parent =self}
+-            }
++            -- Hide the action buttons if the settings is on
++            if not G.SETTINGS.hide_action_buttons then
++                self.children.use_button = UIBox{
++                    definition = G.UIDEF.use_and_sell_buttons(self), 
++                    config = {align=
++                            ((self.area == G.jokers) or (self.area == G.consumeables)) and "cr" or
++                            "bmi"
++                        , offset = 
++                            ((self.area == G.jokers) or (self.area == G.consumeables)) and {x=x_off - 0.4,y=0} or
++                            {x=0,y=0.65},
++                        parent =self}
++                }
++            end
+         elseif self.children.use_button then
+             self.children.use_button:remove()
+             self.children.use_button = nil
+@@ -4622,6 +4644,150 @@
      end
  end
  
@@ -187,8 +215,8 @@ diff -ruN ./balatroSrc/card.lua ./src/card.lua
      cardTable = {
          sort_id = self.sort_id,
 diff -ruN ./balatroSrc/cardarea.lua ./src/cardarea.lua
---- ./balatroSrc/cardarea.lua	2025-03-29 11:03:23.320987300 -0400
-+++ ./src/cardarea.lua	2025-03-29 11:03:29.289054900 -0400
+--- ./balatroSrc/cardarea.lua	2025-03-29 12:04:08.215307800 -0400
++++ ./src/cardarea.lua	2025-03-29 13:19:17.449255400 -0400
 @@ -110,7 +110,19 @@
      end
  end
@@ -204,8 +232,8 @@ diff -ruN ./balatroSrc/cardarea.lua ./src/cardarea.lua
 +times = 1
 +]=]
  function CardArea:can_highlight(card)
-+    -- Disable the action button if the setting is off
-+    if not G.SETTINGS.enable_action_buttons and self.config.type ~= 'hand' then return false end
++    -- Disable hightlight if the setting is on
++    if not G.SETTINGS.enable_highlight and self.config.type ~= 'hand' then return false end
      if G.CONTROLLER.HID.controller then 
          if  self.config.type == 'hand'
          then
@@ -310,8 +338,8 @@ diff -ruN ./balatroSrc/cardarea.lua ./src/cardarea.lua
                  card.T.x = self.T.x + (self.T.w-self.card_w)*((k-1)/math.max(max_cards-1, 1) - 0.5*(#self.cards-max_cards)/math.max(max_cards-1, 1)) + 0.5*(self.card_w - card.T.w)
                  if #self.cards > 2 or (#self.cards > 1 and self == G.consumeables) or (#self.cards > 1 and self.config.spread) then
 diff -ruN ./balatroSrc/engine/controller.lua ./src/engine/controller.lua
---- ./balatroSrc/engine/controller.lua	2025-03-29 11:03:23.320987300 -0400
-+++ ./src/engine/controller.lua	2025-03-29 11:03:29.307002700 -0400
+--- ./balatroSrc/engine/controller.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/engine/controller.lua	2025-03-29 12:04:12.083694500 -0400
 @@ -4,6 +4,17 @@
  --The controller contains all engine logic for how human input interacts with any game objects.
  function Controller:init()
@@ -927,8 +955,8 @@ diff -ruN ./balatroSrc/engine/controller.lua ./src/engine/controller.lua
      if self.cursor_up.target == nil then 
          self.cursor_up.target = G.ROOM
 diff -ruN ./balatroSrc/engine/node.lua ./src/engine/node.lua
---- ./balatroSrc/engine/node.lua	2025-03-29 11:03:23.321516100 -0400
-+++ ./src/engine/node.lua	2025-03-29 11:03:29.322687500 -0400
+--- ./balatroSrc/engine/node.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/engine/node.lua	2025-03-29 12:04:12.099777000 -0400
 @@ -286,6 +286,27 @@
      end
  end
@@ -958,8 +986,8 @@ diff -ruN ./balatroSrc/engine/node.lua ./src/engine/node.lua
  function Node:put_focused_cursor()
      return (self.T.x + self.T.w/2 + self.container.T.x)*(G.TILESCALE*G.TILESIZE), (self.T.y + self.T.h/2 + self.container.T.y)*(G.TILESCALE*G.TILESIZE)
 diff -ruN ./balatroSrc/engine/sprite.lua ./src/engine/sprite.lua
---- ./balatroSrc/engine/sprite.lua	2025-03-29 11:03:23.321516100 -0400
-+++ ./src/engine/sprite.lua	2025-03-29 11:03:29.335697800 -0400
+--- ./balatroSrc/engine/sprite.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/engine/sprite.lua	2025-03-29 12:04:12.117744200 -0400
 @@ -95,7 +95,16 @@
  
          G.SHADERS[_shader or 'dissolve']:send('mouse_screen_pos', self.ARGS.prep_shader.cursor_pos)
@@ -979,8 +1007,8 @@ diff -ruN ./balatroSrc/engine/sprite.lua ./src/engine/sprite.lua
          G.SHADERS[_shader or 'dissolve']:send("time",123.33412*(_draw_major.ID/1.14212 or 12.5123152)%3000)
          G.SHADERS[_shader or 'dissolve']:send("texture_details",self:get_pos_pixel())
 diff -ruN ./balatroSrc/engine/ui.lua ./src/engine/ui.lua
---- ./balatroSrc/engine/ui.lua	2025-03-29 11:03:23.322028700 -0400
-+++ ./src/engine/ui.lua	2025-03-29 11:03:29.346335500 -0400
+--- ./balatroSrc/engine/ui.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/engine/ui.lua	2025-03-29 12:04:12.133330300 -0400
 @@ -322,9 +322,19 @@
      Moveable.move(self.UIRoot, dt)
  end
@@ -1122,8 +1150,8 @@ diff -ruN ./balatroSrc/engine/ui.lua ./src/engine/ui.lua
  end
  
 diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_callbacks.lua
---- ./balatroSrc/functions/button_callbacks.lua	2025-03-29 11:03:23.321516100 -0400
-+++ ./src/functions/button_callbacks.lua	2025-03-29 11:03:29.361331200 -0400
+--- ./balatroSrc/functions/button_callbacks.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/functions/button_callbacks.lua	2025-03-29 12:04:12.148342900 -0400
 @@ -47,6 +47,34 @@
      play_sound('paper1')
  end
@@ -1298,8 +1326,8 @@ diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_cal
          e.config.colour = G.C.GREY
          e.config.button = 'skip_booster'
 diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functions.lua
---- ./balatroSrc/functions/misc_functions.lua	2025-03-29 11:03:23.321516100 -0400
-+++ ./src/functions/misc_functions.lua	2025-03-29 11:16:57.664939800 -0400
+--- ./balatroSrc/functions/misc_functions.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/functions/misc_functions.lua	2025-03-29 12:04:12.165329200 -0400
 @@ -2020,3 +2020,272 @@
        end
    end
@@ -1574,9 +1602,39 @@ diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functio
 +  end
 +end
 diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitions.lua
---- ./balatroSrc/functions/UI_definitions.lua	2025-03-29 11:03:23.322078600 -0400
-+++ ./src/functions/UI_definitions.lua	2025-03-29 11:17:10.629182400 -0400
-@@ -879,6 +879,72 @@
+--- ./balatroSrc/functions/UI_definitions.lua	2025-03-29 12:04:08.216385200 -0400
++++ ./src/functions/UI_definitions.lua	2025-03-29 13:38:51.931763800 -0400
+@@ -799,6 +799,16 @@
+       end
+   end
+ 
++--[=[>
++[[patches]]
++[patches.pattern]
++target = "functions/UI_definitions.lua"
++pattern = "card.children.buy_button = UIBox{"
++position = "before"
++payload = "51;54"
++match_indent = false
++times = 1
++]=]
+   function create_shop_card_ui(card, type, area)
+       G.E_MANAGER:add_event(Event({
+         trigger = 'after',
+@@ -848,6 +858,12 @@
+             }
+           }
+ 
++          -- Hide the action buttons if the settings is on
++          if G.SETTINGS.hide_action_buttons then
++            t2.n = nil
++            t3.n = nil
++          end
++
+           card.children.buy_button = UIBox{
+             definition = t2,
+             config = {
+@@ -879,6 +895,72 @@
        }))
    end
  
@@ -1649,7 +1707,7 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
  
    function attention_text(args)
      args = args or {}
-@@ -1458,12 +1524,21 @@
+@@ -1458,12 +1540,21 @@
    return t 
  end
  
@@ -1672,7 +1730,7 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
    return 
    {n=G.UIT.R, config={id = 'tag_container', ref_table = _tag, align = "cm"}, nodes={
      {n=G.UIT.R, config={align = 'tm', minh = 0.65}, nodes={
-@@ -1475,7 +1550,7 @@
+@@ -1475,7 +1566,7 @@
          }},
          not run_info and {n=G.UIT.C, config={align = "cm", colour = G.C.UI.BACKGROUND_INACTIVE, minh = 0.6, minw = 2, maxw = 2, padding = 0.07, r = 0.1, shadow = true, hover = true, one_press = true, button = 'skip_blind', func = 'hover_tag_proxy', ref_table = _tag}, nodes={
            {n=G.UIT.T, config={text = localize('b_skip_blind'), scale = 0.4, colour = G.C.UI.TEXT_INACTIVE}}
@@ -1681,7 +1739,7 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
            {n=G.UIT.T, config={text = localize('b_skip_reward'), scale = 0.35, colour = G.C.WHITE}},
          }},
        }}
-@@ -2287,6 +2362,21 @@
+@@ -2287,6 +2378,21 @@
      tab_definition_function_args = 'Audio'
    }
  
@@ -1703,7 +1761,7 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
    local t = create_UIBox_generic_options({back_func = 'options',contents = {create_tabs(
      {tabs = tabs,
      tab_h = 7.05,
-@@ -2329,6 +2419,22 @@
+@@ -2329,6 +2435,23 @@
        create_slider({label = localize('b_set_music_vol'), w = 5, h = 0.4, ref_table = G.SETTINGS.SOUND, ref_value = 'music_volume', min = 0, max = 100}),
        create_slider({label = localize('b_set_game_vol'), w = 5, h = 0.4, ref_table = G.SETTINGS.SOUND, ref_value = 'game_sounds_volume', min = 0, max = 100}),
      }}
@@ -1713,12 +1771,13 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
 +target = "functions/UI_definitions.lua"
 +pattern = "elseif tab == 'Graphics' then "
 +position = "before"
-+payload = "1;7"
++payload = "1;8"
 +match_indent = false
 +]=]
 +  elseif tab == 'Dragging' then 
 +    return {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
-+      create_toggle({label = 'Enable Actions Buttons', ref_table = G.SETTINGS, ref_value = 'enable_action_buttons'}),
++      create_toggle({label = 'Enable Highlight', ref_table = G.SETTINGS, ref_value = 'enable_highlight'}),
++      create_toggle({label = 'Hide Actions Buttons', ref_table = G.SETTINGS, ref_value = 'hide_action_buttons'}),
 +      create_toggle({label = 'Enable drag to select/deselect from hand area', ref_table = G.SETTINGS, ref_value = 'enable_drag_select'}),
 +      create_slider({label = 'Drag Area Opacity (Default: 90%)', w = 5, h = 0.4, ref_table = G.SETTINGS, ref_value = 'drag_area_opacity', min = 0, max = 100}),
 +      create_toggle({label = 'Move Joker Booster Pack Select Area To Joker Buy Area', ref_table = G.SETTINGS, ref_value = 'move_select_joker_drag_area'}),
@@ -1726,7 +1785,7 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
    elseif tab == 'Graphics' then 
      return {n=G.UIT.ROOT, config={align = "cm", padding = 0.05, colour = G.C.CLEAR}, nodes={
        create_option_cycle({w = 4,scale = 0.8, label = localize("b_set_shadows"),options = localize('ml_shadow_opt'), opt_callback = 'change_shadows', current_option = (G.SETTINGS.GRAPHICS.shadows == 'On' and 1 or 2)}),
-@@ -3996,6 +4102,16 @@
+@@ -3996,6 +4119,16 @@
      temp_blind.states.hover.can = true
      temp_blind.states.drag.can = false
      temp_blind.states.collide.can = true
@@ -1743,7 +1802,7 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
      temp_blind.config = {blind = v, force_focus = true}
      if discovered and not v.alerted then 
        blinds_to_be_alerted[#blinds_to_be_alerted+1] = temp_blind
-@@ -4151,7 +4267,16 @@
+@@ -4151,7 +4284,16 @@
    local locked_card = Card(G.your_collection.T.x + G.your_collection.T.w/2 - G.CARD_W/2, G.your_collection.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, card_center.set == 'Voucher' and G.v_locked or G.j_locked)
    locked_card:remove_UI()
    locked_card.ID = card.ID
@@ -1762,8 +1821,8 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
    card.states.visible = false
    card.no_ui = true
 diff -ruN ./balatroSrc/game.lua ./src/game.lua
---- ./balatroSrc/game.lua	2025-03-29 11:03:23.322078600 -0400
-+++ ./src/game.lua	2025-03-29 11:03:29.411862000 -0400
+--- ./balatroSrc/game.lua	2025-03-29 12:04:08.216385200 -0400
++++ ./src/game.lua	2025-03-29 12:04:12.197849400 -0400
 @@ -3007,9 +3007,18 @@
      return (_state*15251252.2/5.132)%1,  (_state*1422.5641311/5.42)%1,  (_state*1522.1523122/5.132)%1, 1
  end
@@ -1785,8 +1844,8 @@ diff -ruN ./balatroSrc/game.lua ./src/game.lua
          if self.buttons then
              self.buttons.states.visible = false
 diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
---- ./balatroSrc/globals.lua	2025-03-29 11:03:23.322078600 -0400
-+++ ./src/globals.lua	2025-03-29 11:03:29.425868700 -0400
+--- ./balatroSrc/globals.lua	2025-03-29 12:04:08.215873400 -0400
++++ ./src/globals.lua	2025-03-29 13:17:41.097805100 -0400
 @@ -42,11 +42,35 @@
      self.F_HIDE_BETA_LANGS = nil
  
@@ -1823,7 +1882,7 @@ diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
      end
  
      if love.system.getOS() == 'OS X' then
-@@ -139,6 +163,19 @@
+@@ -139,6 +163,20 @@
      --           SETTINGS
      --||||||||||||||||||||||||||||||
      self.SETTINGS = {
@@ -1833,17 +1892,18 @@ diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
 +target = "globals.lua"
 +pattern = "self.SETTINGS = {"
 +position = "after"
-+payload = "1;4"
++payload = "1;5"
 +match_indent = false
 +]=]
-+        enable_action_buttons = true,
++        enable_highlight = true,
++        hide_action_buttons = false,
 +        move_select_joker_drag_area = false,
 +        drag_area_opacity = 90,
 +        enable_drag_select = true,
          COMP = {
              name = '',
              prev_name = '',
-@@ -340,7 +377,19 @@
+@@ -340,7 +378,19 @@
      --||||||||||||||||||||||||||||||
      --        CONSTANTS
      --||||||||||||||||||||||||||||||
@@ -1865,8 +1925,8 @@ diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
      self.DEBUG = false
      self.ANIMATION_FPS = 10
 diff -ruN ./balatroSrc/main.lua ./src/main.lua
---- ./balatroSrc/main.lua	2025-03-29 11:03:23.324316100 -0400
-+++ ./src/main.lua	2025-03-29 11:03:29.438700700 -0400
+--- ./balatroSrc/main.lua	2025-03-29 12:04:08.219380600 -0400
++++ ./src/main.lua	2025-03-29 12:04:12.235323000 -0400
 @@ -1,3 +1,7 @@
 +if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 +  require("lldebugger").start()
@@ -1877,7 +1937,7 @@ diff -ruN ./balatroSrc/main.lua ./src/main.lua
  require "bit"
 diff -ruN ./balatroSrc/ModsSupport/Cryptid.lua ./src/ModsSupport/Cryptid.lua
 --- ./balatroSrc/ModsSupport/Cryptid.lua	1969-12-31 19:00:00.000000000 -0500
-+++ ./src/ModsSupport/Cryptid.lua	2025-03-29 11:03:29.452729000 -0400
++++ ./src/ModsSupport/Cryptid.lua	2025-03-29 12:04:12.255760100 -0400
 @@ -0,0 +1,58 @@
 +-- This just revert the half baked implementation of Cryptid hover inside card tooltip
 +-- until it's fixed or a better solution can be implemented.
@@ -1939,7 +1999,7 @@ diff -ruN ./balatroSrc/ModsSupport/Cryptid.lua ./src/ModsSupport/Cryptid.lua
 +]=]
 diff -ruN ./balatroSrc/ModsSupport/Galdur.lua ./src/ModsSupport/Galdur.lua
 --- ./balatroSrc/ModsSupport/Galdur.lua	1969-12-31 19:00:00.000000000 -0500
-+++ ./src/ModsSupport/Galdur.lua	2025-03-29 11:03:29.454730500 -0400
++++ ./src/ModsSupport/Galdur.lua	2025-03-29 12:04:12.257766500 -0400
 @@ -0,0 +1,24 @@
 +--[=[>
 +[[patches]]
@@ -1966,8 +2026,8 @@ diff -ruN ./balatroSrc/ModsSupport/Galdur.lua ./src/ModsSupport/Galdur.lua
 +    end
 +end
 diff -ruN ./balatroSrc/tag.lua ./src/tag.lua
---- ./balatroSrc/tag.lua	2025-03-29 11:03:23.323136500 -0400
-+++ ./src/tag.lua	2025-03-29 11:03:29.457734400 -0400
+--- ./balatroSrc/tag.lua	2025-03-29 12:04:08.219380600 -0400
++++ ./src/tag.lua	2025-03-29 12:04:12.260772100 -0400
 @@ -509,6 +509,16 @@
      tag_sprite.states.drag.can = false
      tag_sprite.states.collide.can = true
