@@ -50,7 +50,7 @@ priority = 1`;
     console.info(luaFile);
 
     if (verbose) console.info(patches.join('\n\n'));
-    fs.writeFileSync(path.join(buildFolder, process.env.modName, 'lovely', `${path.basename(luaFile, '.lua')}.toml`), file);
+    fs.writeFileSync(path.join(buildFolder, process.env.modName, 'lovely', `${path.basename(luaFile, '.lua')}.toml`), patches.join('\n\n'));
 
     if (verbose) console.info('');
   }
