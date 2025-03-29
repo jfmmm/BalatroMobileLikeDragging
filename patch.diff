@@ -1299,7 +1299,7 @@ diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_cal
          e.config.button = 'skip_booster'
 diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functions.lua
 --- ./balatroSrc/functions/misc_functions.lua	2025-03-29 11:03:23.321516100 -0400
-+++ ./src/functions/misc_functions.lua	2025-03-29 11:04:23.989164100 -0400
++++ ./src/functions/misc_functions.lua	2025-03-29 11:16:57.664939800 -0400
 @@ -2020,3 +2020,272 @@
        end
    end
@@ -1311,7 +1311,7 @@ diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functio
 +target = "functions/misc_functions.lua"
 +pattern = "function EMPTY(t)"
 +position = "before"
-+payload = "1;252"
++payload = "1;260"
 +match_indent = true
 +]=]
 +function create_drag_target_from_card(_card)
@@ -1575,7 +1575,7 @@ diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functio
 +end
 diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitions.lua
 --- ./balatroSrc/functions/UI_definitions.lua	2025-03-29 11:03:23.322078600 -0400
-+++ ./src/functions/UI_definitions.lua	2025-03-29 11:03:29.392701000 -0400
++++ ./src/functions/UI_definitions.lua	2025-03-29 11:17:10.629182400 -0400
 @@ -879,6 +879,72 @@
        }))
    end
