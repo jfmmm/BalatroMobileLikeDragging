@@ -7,6 +7,14 @@ import chalk from 'chalk';
 
 dotenvJson();
 
+// create src and balatroSrc folders if they don't exist
+if (!fs.existsSync('./src')) {
+  fs.mkdirSync('./src');
+}
+if (!fs.existsSync('./balatroSrc')) {
+  fs.mkdirSync('./balatroSrc');
+}
+
 function convertCRLFToLF(basePath, data) {
   if (data.status === 'extracted') {
     const filePath = path.join(basePath, data.file);

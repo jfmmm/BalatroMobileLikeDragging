@@ -7,13 +7,15 @@ const srcFolder = './src';
 
 // @TODO Put a y/n prompt before cleaning the folder this could easily wipe out work.
 
-fs.readdirSync(srcFolder).forEach((file) => {
-  if (fs.lstatSync(path.join(srcFolder, file)).isDirectory()) {
-    fs.rmdirSync(path.join(srcFolder, file), { recursive: true });
-    return;
-  }
+if (fs.existsSync(srcFolder)) {
+  fs.readdirSync(srcFolder).forEach((file) => {
+    if (fs.lstatSync(path.join(srcFolder, file)).isDirectory()) {
+      fs.rmdirSync(path.join(srcFolder, file), { recursive: true });
+      return;
+    }
 
-  fs.rmSync(path.join(srcFolder, file));
-});
+    fs.rmSync(path.join(srcFolder, file));
+  });
+}
 
 console.log(chalk.green(`-> \`.src/\` folder cleaned.`));
