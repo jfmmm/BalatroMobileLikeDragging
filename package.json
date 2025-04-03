@@ -7,14 +7,17 @@
     "unpack": "npm run cleanSources && node tools/unpackBalatroSource.mjs",
     "repack": "node tools/repackBalatroSource.mjs",
     "watch": "nodemon --watch src -e lua --exec npm run buildToModFolder",
+    "watchRepack": "nodemon --watch src -e lua --exec node tools/repackBalatroSource.mjs",
     "build": "node tools/build.mjs",
-    "createPatch": "diff -ruN ./balatroSrc ./src > patch.diff",
+    "createPatch": "run-s createRawPatch || true && npm run clearTimestamps",
+    "createRawPatch": "diff -ruN ./balatroSrc ./src > patch.diff",
     "applyPatch": "patch -p2 -d ./src < patch.diff",
     "copyToModFolder": "node tools/copyToModFolder.mjs",
     "buildToModFolder": "npm run build && npm run copyToModFolder",
     "cleanSources": "npm run cleanSourceFolder && npm run cleanBalatroFolder",
     "cleanSourceFolder": "node tools/cleanSourceFolder.mjs",
-    "cleanBalatroFolder": "node tools/cleanBalatroFolder.mjs"
+    "cleanBalatroFolder": "node tools/cleanBalatroFolder.mjs",
+    "clearTimestamps": "node tools/clearTimestampFromPatch.mjs"
   },
   "repository": {
     "type": "git",
@@ -31,6 +34,7 @@
     "chalk": "^5.4.1",
     "dotenv-json": "^1.0.0",
     "node-7z": "^3.0.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "npm-run-all": "^4.1.5"
   }
 }

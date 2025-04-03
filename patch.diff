@@ -1,6 +1,6 @@
 diff -ruN ./balatroSrc/card.lua ./src/card.lua
---- ./balatroSrc/card.lua	2025-04-01 21:47:58.620389000 -0400
-+++ ./src/card.lua	2025-04-02 23:06:20.829348900 -0400
+--- ./balatroSrc/card.lua
++++ ./src/card.lua
 @@ -1520,7 +1520,17 @@
      end
  end
@@ -220,8 +220,8 @@ diff -ruN ./balatroSrc/card.lua ./src/card.lua
      cardTable = {
          sort_id = self.sort_id,
 diff -ruN ./balatroSrc/cardarea.lua ./src/cardarea.lua
---- ./balatroSrc/cardarea.lua	2025-04-01 21:47:58.620389000 -0400
-+++ ./src/cardarea.lua	2025-04-01 21:48:03.911382000 -0400
+--- ./balatroSrc/cardarea.lua
++++ ./src/cardarea.lua
 @@ -110,7 +110,19 @@
      end
  end
@@ -343,8 +343,8 @@ diff -ruN ./balatroSrc/cardarea.lua ./src/cardarea.lua
                  card.T.x = self.T.x + (self.T.w-self.card_w)*((k-1)/math.max(max_cards-1, 1) - 0.5*(#self.cards-max_cards)/math.max(max_cards-1, 1)) + 0.5*(self.card_w - card.T.w)
                  if #self.cards > 2 or (#self.cards > 1 and self == G.consumeables) or (#self.cards > 1 and self.config.spread) then
 diff -ruN ./balatroSrc/engine/controller.lua ./src/engine/controller.lua
---- ./balatroSrc/engine/controller.lua	2025-04-01 21:47:58.620914900 -0400
-+++ ./src/engine/controller.lua	2025-04-02 22:34:40.205363400 -0400
+--- ./balatroSrc/engine/controller.lua
++++ ./src/engine/controller.lua
 @@ -4,6 +4,17 @@
  --The controller contains all engine logic for how human input interacts with any game objects.
  function Controller:init()
@@ -960,8 +960,8 @@ diff -ruN ./balatroSrc/engine/controller.lua ./src/engine/controller.lua
      if self.cursor_up.target == nil then 
          self.cursor_up.target = G.ROOM
 diff -ruN ./balatroSrc/engine/node.lua ./src/engine/node.lua
---- ./balatroSrc/engine/node.lua	2025-04-01 21:47:58.620914900 -0400
-+++ ./src/engine/node.lua	2025-04-01 21:48:03.934289100 -0400
+--- ./balatroSrc/engine/node.lua
++++ ./src/engine/node.lua
 @@ -286,6 +286,27 @@
      end
  end
@@ -991,8 +991,8 @@ diff -ruN ./balatroSrc/engine/node.lua ./src/engine/node.lua
  function Node:put_focused_cursor()
      return (self.T.x + self.T.w/2 + self.container.T.x)*(G.TILESCALE*G.TILESIZE), (self.T.y + self.T.h/2 + self.container.T.y)*(G.TILESCALE*G.TILESIZE)
 diff -ruN ./balatroSrc/engine/sprite.lua ./src/engine/sprite.lua
---- ./balatroSrc/engine/sprite.lua	2025-04-01 21:47:58.620914900 -0400
-+++ ./src/engine/sprite.lua	2025-04-02 21:27:27.376150900 -0400
+--- ./balatroSrc/engine/sprite.lua
++++ ./src/engine/sprite.lua
 @@ -95,7 +95,16 @@
  
          G.SHADERS[_shader or 'dissolve']:send('mouse_screen_pos', self.ARGS.prep_shader.cursor_pos)
@@ -1012,8 +1012,8 @@ diff -ruN ./balatroSrc/engine/sprite.lua ./src/engine/sprite.lua
          G.SHADERS[_shader or 'dissolve']:send("time",123.33412*(_draw_major.ID/1.14212 or 12.5123152)%3000)
          G.SHADERS[_shader or 'dissolve']:send("texture_details",self:get_pos_pixel())
 diff -ruN ./balatroSrc/engine/ui.lua ./src/engine/ui.lua
---- ./balatroSrc/engine/ui.lua	2025-04-01 21:47:58.621898800 -0400
-+++ ./src/engine/ui.lua	2025-04-01 21:48:03.957778200 -0400
+--- ./balatroSrc/engine/ui.lua
++++ ./src/engine/ui.lua
 @@ -322,9 +322,19 @@
      Moveable.move(self.UIRoot, dt)
  end
@@ -1155,8 +1155,8 @@ diff -ruN ./balatroSrc/engine/ui.lua ./src/engine/ui.lua
  end
  
 diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_callbacks.lua
---- ./balatroSrc/functions/button_callbacks.lua	2025-04-01 21:47:58.621898800 -0400
-+++ ./src/functions/button_callbacks.lua	2025-04-01 21:48:03.968786600 -0400
+--- ./balatroSrc/functions/button_callbacks.lua
++++ ./src/functions/button_callbacks.lua
 @@ -47,6 +47,34 @@
      play_sound('paper1')
  end
@@ -1331,8 +1331,8 @@ diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_cal
          e.config.colour = G.C.GREY
          e.config.button = 'skip_booster'
 diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functions.lua
---- ./balatroSrc/functions/misc_functions.lua	2025-04-01 21:47:58.621898800 -0400
-+++ ./src/functions/misc_functions.lua	2025-04-02 18:08:16.708724300 -0400
+--- ./balatroSrc/functions/misc_functions.lua
++++ ./src/functions/misc_functions.lua
 @@ -2020,3 +2020,272 @@
        end
    end
@@ -1607,8 +1607,8 @@ diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functio
 +  end
 +end
 diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitions.lua
---- ./balatroSrc/functions/UI_definitions.lua	2025-04-01 21:47:58.622900100 -0400
-+++ ./src/functions/UI_definitions.lua	2025-04-01 21:48:03.993282700 -0400
+--- ./balatroSrc/functions/UI_definitions.lua
++++ ./src/functions/UI_definitions.lua
 @@ -799,6 +799,16 @@
        end
    end
@@ -1826,8 +1826,8 @@ diff -ruN ./balatroSrc/functions/UI_definitions.lua ./src/functions/UI_definitio
    card.states.visible = false
    card.no_ui = true
 diff -ruN ./balatroSrc/game.lua ./src/game.lua
---- ./balatroSrc/game.lua	2025-04-01 21:47:58.621898800 -0400
-+++ ./src/game.lua	2025-04-01 21:48:04.005287600 -0400
+--- ./balatroSrc/game.lua
++++ ./src/game.lua
 @@ -3007,9 +3007,18 @@
      return (_state*15251252.2/5.132)%1,  (_state*1422.5641311/5.42)%1,  (_state*1522.1523122/5.132)%1, 1
  end
@@ -1849,8 +1849,8 @@ diff -ruN ./balatroSrc/game.lua ./src/game.lua
          if self.buttons then
              self.buttons.states.visible = false
 diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
---- ./balatroSrc/globals.lua	2025-04-01 21:47:58.622900100 -0400
-+++ ./src/globals.lua	2025-04-01 21:48:04.018290400 -0400
+--- ./balatroSrc/globals.lua
++++ ./src/globals.lua
 @@ -42,11 +42,35 @@
      self.F_HIDE_BETA_LANGS = nil
  
@@ -1930,8 +1930,8 @@ diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
      self.DEBUG = false
      self.ANIMATION_FPS = 10
 diff -ruN ./balatroSrc/main.lua ./src/main.lua
---- ./balatroSrc/main.lua	2025-04-01 21:47:58.643374300 -0400
-+++ ./src/main.lua	2025-04-01 21:48:04.029299000 -0400
+--- ./balatroSrc/main.lua
++++ ./src/main.lua
 @@ -1,3 +1,7 @@
 +if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 +  require("lldebugger").start()
@@ -1941,8 +1941,8 @@ diff -ruN ./balatroSrc/main.lua ./src/main.lua
  require "engine/object"
  require "bit"
 diff -ruN ./balatroSrc/ModsSupport/CardSleeves.lua ./src/ModsSupport/CardSleeves.lua
---- ./balatroSrc/ModsSupport/CardSleeves.lua	1969-12-31 19:00:00.000000000 -0500
-+++ ./src/ModsSupport/CardSleeves.lua	2025-04-02 23:36:19.982770400 -0400
+--- ./balatroSrc/ModsSupport/CardSleeves.lua
++++ ./src/ModsSupport/CardSleeves.lua
 @@ -0,0 +1,19 @@
 +--[=[>
 +[[patches]]
@@ -1964,8 +1964,8 @@ diff -ruN ./balatroSrc/ModsSupport/CardSleeves.lua ./src/ModsSupport/CardSleeves
 +    end
 +end
 diff -ruN ./balatroSrc/ModsSupport/Cryptid.lua ./src/ModsSupport/Cryptid.lua
---- ./balatroSrc/ModsSupport/Cryptid.lua	1969-12-31 19:00:00.000000000 -0500
-+++ ./src/ModsSupport/Cryptid.lua	2025-04-01 21:48:04.041130900 -0400
+--- ./balatroSrc/ModsSupport/Cryptid.lua
++++ ./src/ModsSupport/Cryptid.lua
 @@ -0,0 +1,58 @@
 +-- This just revert the half baked implementation of Cryptid hover inside card tooltip
 +-- until it's fixed or a better solution can be implemented.
@@ -2026,8 +2026,8 @@ diff -ruN ./balatroSrc/ModsSupport/Cryptid.lua ./src/ModsSupport/Cryptid.lua
 +payload = "if not self.highlighted and not self.states.hover.is then"
 +]=]
 diff -ruN ./balatroSrc/ModsSupport/Galdur.lua ./src/ModsSupport/Galdur.lua
---- ./balatroSrc/ModsSupport/Galdur.lua	1969-12-31 19:00:00.000000000 -0500
-+++ ./src/ModsSupport/Galdur.lua	2025-04-02 23:41:22.632626400 -0400
+--- ./balatroSrc/ModsSupport/Galdur.lua
++++ ./src/ModsSupport/Galdur.lua
 @@ -0,0 +1,24 @@
 +--[=[>
 +[[patches]]
@@ -2054,8 +2054,8 @@ diff -ruN ./balatroSrc/ModsSupport/Galdur.lua ./src/ModsSupport/Galdur.lua
 +    end
 +end
 diff -ruN ./balatroSrc/tag.lua ./src/tag.lua
---- ./balatroSrc/tag.lua	2025-04-01 21:47:58.643374300 -0400
-+++ ./src/tag.lua	2025-04-01 21:48:04.059658400 -0400
+--- ./balatroSrc/tag.lua
++++ ./src/tag.lua
 @@ -509,6 +509,16 @@
      tag_sprite.states.drag.can = false
      tag_sprite.states.collide.can = true
