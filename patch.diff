@@ -1206,8 +1206,8 @@ diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_cal
 +match_indent = false
 +]=]
 +G.FUNCS.can_buy_check = function(_card)
-+  local isCryptidMod = to_big
-+  if isCryptidMod then
++  local isTalismanMod = Talisman
++  if isTalismanMod then
 +    if to_big(_card.cost) > (to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (to_big(_card.cost) > to_big(0)) then
 +      return false
 +    end
@@ -1237,8 +1237,8 @@ diff -ruN ./balatroSrc/functions/button_callbacks.lua ./src/functions/button_cal
 +match_indent = false
 +]=]
 +G.FUNCS.can_buy_and_use_check = function(_card)
-+  local isCryptidMod = to_big
-+  if isCryptidMod then
++  local isTalismanMod = Talisman
++  if isTalismanMod then
 +    if ((to_big(_card.cost) > to_big(G.GAME.dollars) - to_big(G.GAME.bankrupt_at)) and (to_big(_card.cost) > to_big(0))) or (not _card:can_use_consumeable()) then
 +      return false
 +    end
@@ -1348,7 +1348,7 @@ diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functio
 +match_indent = true
 +]=]
 +function create_drag_target_from_card(_card)
-+    local isCryptidMod = to_big
++    local isCryptidMod = Cryptid
 +    local isLockTheDeal = LTDM and _card.ltdm_state
 +
 +    if _card and G.STAGE == G.STAGES.RUN then
