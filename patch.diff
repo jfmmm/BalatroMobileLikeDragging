@@ -1608,7 +1608,7 @@ diff -ruN ./balatroSrc/functions/misc_functions.lua ./src/functions/misc_functio
 +
 +        -- Lock the deal support
 +        if isLockTheDeal and G.shop then
-+            local shopControls = G.shop:get_UIE_by_ID('ltdm_lock_unlock').parent
++            local shopControls = G.shop:get_UIE_by_ID('next_round_button').parent
 +            LTDM_lockUnlock = Moveable{T={ x = shopControls.T.x, y = shopControls.T.y, w = shopControls.T.w, h = shopControls.T.h }}
 +
 +            local lock_text = _card.ltdm_state.locked and {'UNLOCK'} or {'LOCK'}
