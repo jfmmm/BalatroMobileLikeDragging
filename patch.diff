@@ -1939,11 +1939,10 @@ diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
          COMP = {
              name = '',
              prev_name = '',
-@@ -340,7 +378,19 @@
+@@ -340,6 +378,18 @@
      --||||||||||||||||||||||||||||||
      --        CONSTANTS
      --||||||||||||||||||||||||||||||
--    self.MIN_CLICK_DIST = 0.9
 +--[=[>
 +[[patches]]
 +[patches.pattern]
@@ -1956,10 +1955,9 @@ diff -ruN ./balatroSrc/globals.lua ./src/globals.lua
 +    -- Changing this from 0.9 to 0.1 fix the issue with the buttons popping out
 +    -- on cards when you drag them and release them close to where you started dragging
 +    -- Putting 0 break every button in the game, main menu included.
-+    self.MIN_CLICK_DIST = 0.1
+     self.MIN_CLICK_DIST = 0.9
      self.MIN_HOVER_TIME = 0.1
      self.DEBUG = false
-     self.ANIMATION_FPS = 10
 diff -ruN ./balatroSrc/main.lua ./src/main.lua
 --- ./balatroSrc/main.lua
 +++ ./src/main.lua
